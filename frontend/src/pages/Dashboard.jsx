@@ -159,7 +159,7 @@ const Dashboard = () => {
           </h2>
           <div className="flow-root">
             <ul className="-my-5 divide-y divide-gray-200">
-              {stats?.low_stock_products?.slice(0, 5).map((product, idx) => (
+              {stats?.low_stock_products?.slice(0, 5)?.map((product, idx) => (
                 <li
                   key={idx}
                   className="py-4 flex items-center justify-between"
