@@ -7,7 +7,6 @@ import {
   ClipboardDocumentListIcon,
   ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "../contexts/AuthContext";
 import Pagination from "../components/Pagination";
 
 export default function Orders() {
@@ -24,16 +23,6 @@ export default function Orders() {
   const [filterDate, setFilterDate] = useState(initialDate);
   const [filterTime, setFilterTime] = useState("");
   const [searchTrigger, setSearchTrigger] = useState(0);
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "Invalid Date";
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "";
@@ -127,6 +116,25 @@ export default function Orders() {
     }
   };
 
+  const handleDownloadPdf = async (orderId, orderNo) => {
+    try {
+      const response = await api.get(`/orders/${orderId}/pdf`, {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `order-${orderNo}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      alert("Failed to download PDF.");
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -217,6 +225,13 @@ export default function Orders() {
                     onClick={() => handleDownloadCsv(order.id, order.order_no)}
                     className="text-gray-400 hover:text-green-600 transition-colors p-2"
                     title="Export CSV"
+                  >
+                    <ArrowDownTrayIcon className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => handleDownloadPdf(order.id, order.order_no)}
+                    className="text-gray-400 hover:text-red-600 transition-colors p-2"
+                    title="Export PDF"
                   >
                     <ArrowDownTrayIcon className="h-5 w-5" />
                   </button>

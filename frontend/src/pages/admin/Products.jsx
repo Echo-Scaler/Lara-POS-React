@@ -183,7 +183,7 @@ export default function Products() {
           Products Catalog
         </h1>
         <div className="flex flex-col sm:flex-row gap-3">
-          <form onSubmit={handleSearch} className="relative flex items-center">
+          <form onSubmit={handleSearch} className="relative flex items-center gap-3">
             <div className="relative flex-1 sm:w-64">
               <input
                 type="text"

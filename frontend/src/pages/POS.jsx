@@ -299,14 +299,7 @@ export default function POS() {
                     onClick={() => addToCart(product)}
                     className={`relative group bg-white rounded-2xl shadow-[0_2px_8px_-3px_rgba(0,0,0,0.1)] border border-gray-100 p-3 pb-4 cursor-pointer transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] hover:-translate-y-1 overflow-hidden flex flex-col ${product.stock === 0 ? "opacity-50 grayscale select-none" : "hover:border-indigo-300"}`}
                   >
-                    {/* Hover Add Overlay for intuitive interaction */}
-                    {product.stock > 0 && (
-                      <div className="absolute inset-0 bg-indigo-600/0 group-hover:bg-indigo-600/5 transition-colors duration-300 z-10 pointer-events-none flex items-center justify-center opacity-0 group-hover:opacity-100">
-                        <div className="bg-indigo-600 text-white p-3 rounded-full shadow-lg transform scale-50 group-hover:scale-100 transition-transform duration-300 ease-out">
-                          <PlusIcon className="w-6 h-6" />
-                        </div>
-                      </div>
-                    )}
+                    
 
                     <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-xl bg-gray-50 mb-4 h-36 flex items-center justify-center relative border border-gray-100/50">
                       {product.image_url ? (
@@ -338,7 +331,7 @@ export default function POS() {
                         )}
 
                         {product.discount > 0 && (
-                          <span className="bg-rose-500/90 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-sm">
+                          <span className="bg-rose-200 text-rose-900 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded shadow-sm">
                             {product.discount}% OFF
                           </span>
                         )}
@@ -358,7 +351,7 @@ export default function POS() {
                               ${parseFloat(product.price).toFixed(2)}
                             </span>
                           )}
-                          <span className="text-base sm:text-lg font-black tracking-tight text-indigo-600 leading-none">
+                          <span className="text-base sm:text-lg font-black tracking-tight text-gray-900 leading-none">
                             ${parseFloat(product.discounted_price).toFixed(2)}
                           </span>
                         </div>
