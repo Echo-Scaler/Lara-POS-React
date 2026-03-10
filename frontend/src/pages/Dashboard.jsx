@@ -7,6 +7,7 @@ import {
   ExclamationTriangleIcon,
   UsersIcon,
   UserGroupIcon,
+  CubeIcon,
 } from "@heroicons/react/24/outline";
 import {
   LineChart,
@@ -173,21 +174,21 @@ const Dashboard = () => {
         </Link>
 
         <Link
-          to="/admin/products?filter=low_stock"
+          to="/admin/products"
           className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-md hover:-translate-y-1 block"
         >
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0 bg-red-50 p-3 rounded-lg">
-                <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
+              <div className="flex-shrink-0 bg-orange-50 p-3 rounded-lg">
+                <CubeIcon className="h-6 w-6 text-orange-600" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="truncate text-sm font-medium text-gray-500">
-                    Low Stock
+                    Total Products
                   </dt>
-                  <dd className="text-2xl font-bold text-red-600">
-                    {stats?.low_stock_products?.length || 0}
+                  <dd className="text-2xl font-bold text-gray-900">
+                    {stats?.total_products || 0}
                   </dd>
                 </dl>
               </div>
@@ -255,10 +256,15 @@ const Dashboard = () => {
         {/* Low Stock Alerts */}
         <div className="bg-white shadow-sm rounded-xl border border-gray-100 p-6 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-400 to-red-600"></div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
-            Stock Alerts
-          </h2>
+          <div className="flex flex-col mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
+              Stock Alerts
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Items under 7 counts stock
+            </p>
+          </div>
           <div className="flow-root mt-4">
             <ul className="-my-4 divide-y divide-gray-100">
               {stats?.low_stock_products?.slice(0, 5)?.map((product, idx) => (

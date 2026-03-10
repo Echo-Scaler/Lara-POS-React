@@ -99,54 +99,61 @@ export default function Categories() {
         </button>
       </div>
 
-      <div className="bg-white shadow-sm overflow-hidden sm:rounded-xl border border-gray-200 flex flex-col">
-        <ul className="divide-y divide-gray-100 flex-1">
-          {categories.map((cat) => (
-            <li
-              key={cat.id}
-              className="px-4 py-4 flex items-center justify-between sm:px-6"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-indigo-600 truncate">
-                  {cat.name}
-                </p>
-                <div className="mt-1 flex items-center text-sm text-gray-500">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${cat.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+      <div className="flex-1 flex flex-col min-h-0 relative mb-4">
+        {categories.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {categories.map((cat) => (
+              <div
+                key={cat.id}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-200"
+              >
+                <div className="p-5 flex-1 relative">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-lg font-bold text-gray-900 truncate pr-6 mt-0.5">
+                      {cat.name}
+                    </h3>
+                    <span
+                      className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full uppercase tracking-wider absolute right-5 top-5 ${cat.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                    >
+                      {cat.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-4 line-clamp-3">
+                    {cat.description || "No description provided."}
+                  </p>
+                  <div className="flex items-center text-sm font-medium text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <CubeIcon className="w-5 h-5 mr-2 text-indigo-500" />
+                    <span>Products: {cat.products_count || 0}</span>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-end space-x-2">
+                  <button
+                    onClick={() => openModal(cat)}
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded shadow-sm text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
                   >
-                    {cat.is_active ? "Active" : "Inactive"}
-                  </span>
-                  <span className="ml-2 truncate max-w-sm">
-                    {cat.description}
-                  </span>
-                  <span className="ml-2 text-gray-400">
-                    Products: {cat.products_count || 0}
-                  </span>
+                    <PencilIcon className="h-4 w-4 mr-1.5" /> Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(cat.id)}
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded shadow-sm text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                  >
+                    <TrashIcon className="h-4 w-4 mr-1.5" /> Delete
+                  </button>
                 </div>
               </div>
-              <div className="ml-5 flex-shrink-0 flex items-center space-x-2">
-                <button
-                  onClick={() => openModal(cat)}
-                  className="text-indigo-600 hover:text-indigo-900 p-2"
-                >
-                  <PencilIcon className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => handleDelete(cat.id)}
-                  className="text-red-600 hover:text-red-900 p-2"
-                >
-                  <TrashIcon className="h-5 w-5" />
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-        {categories.length === 0 && !loading && (
-          <div className="px-6 py-12 text-center text-gray-500 bg-gray-50 flex flex-col items-center">
-            <CubeIcon className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-            <p>No categories found.</p>
+            ))}
           </div>
+        ) : (
+          !loading && (
+            <div className="px-6 py-12 text-center text-gray-500 bg-white shadow-sm sm:rounded-xl border border-gray-200 flex flex-col items-center">
+              <CubeIcon className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+              <p>No categories found.</p>
+            </div>
+          )
         )}
+      </div>
+
+      <div className="mt-auto">
         <Pagination
           currentPage={currentPage}
           lastPage={lastPage}

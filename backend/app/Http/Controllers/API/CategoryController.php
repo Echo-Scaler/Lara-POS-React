@@ -22,7 +22,7 @@ class CategoryController extends Controller
             $query->where('is_active', $request->boolean('active'));
         }
 
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->get('per_page', 9);
         $categories = $query->orderBy('name')->paginate($perPage);
 
         return CategoryResource::collection($categories)->additional([
@@ -35,20 +35,20 @@ class CategoryController extends Controller
     {
         $category = Category::create($request->validated());
 
-        return $this->successResponse(new CategoryResource($category), 'Category created successfully', 201);
+        return $this->successResponse((new CategoryResource($category))->resolve(), 'Category created successfully', 201);
     }
 
     public function show(Category $category)
     {
         $category->loadCount('products');
-        return $this->successResponse(new CategoryResource($category));
+        return $this->successResponse((new CategoryResource($category))->resolve());
     }
 
     public function update(UpdateCategoryRequest $request, Category $category)
     {
         $category->update($request->validated());
 
-        return $this->successResponse(new CategoryResource($category), 'Category updated successfully');
+        return $this->successResponse((new CategoryResource($category))->resolve(), 'Category updated successfully');
     }
 
     public function destroy(Category $category)

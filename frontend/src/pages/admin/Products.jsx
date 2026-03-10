@@ -6,6 +6,7 @@ import {
   TrashIcon,
   PencilIcon,
   CubeIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import Pagination from "../../components/Pagination";
 
@@ -21,6 +22,8 @@ export default function Products() {
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [paginationData, setPaginationData] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTrigger, setSearchTrigger] = useState(0);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -41,7 +44,13 @@ export default function Products() {
 
   useEffect(() => {
     fetchProducts(currentPage);
-  }, [currentPage, initialFilter]);
+  }, [currentPage, initialFilter, searchTrigger]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setCurrentPage(1);
+    setSearchTrigger((prev) => prev + 1);
+  };
 
   const fetchProducts = async (page = 1) => {
     setLoading(true);
@@ -49,6 +58,9 @@ export default function Products() {
       let url = `/products?page=${page}`;
       if (initialFilter === "low_stock") {
         url += "&low_stock=1";
+      }
+      if (searchTerm) {
+        url += `&search=${encodeURIComponent(searchTerm)}`;
       }
       const res = await api.get(url);
       setProducts(res.data.data); // data structure from API resource
@@ -155,20 +167,40 @@ export default function Products() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading && products.length === 0) return <div>Loading...</div>;
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
         <h1 className="text-2xl font-semibold text-gray-900">
           Products Catalog
         </h1>
-        <button
-          onClick={() => openModal()}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
-        >
-          <PlusIcon className="-ml-1 mr-2 h-5 w-5" /> Add Product
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <form onSubmit={handleSearch} className="relative flex items-center">
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="block w-full sm:w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out"
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <MagnifyingGlassIcon
+                className="h-5 w-5 text-gray-400"
+                aria-hidden="true"
+              />
+            </div>
+            <button type="submit" className="hidden">
+              Search
+            </button>
+          </form>
+          <button
+            onClick={() => openModal()}
+            className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <PlusIcon className="-ml-1 mr-2 h-5 w-5" /> Add Product
+          </button>
+        </div>
       </div>
 
       <div className="bg-white shadow-sm overflow-hidden sm:rounded-xl border border-gray-200 flex flex-col">

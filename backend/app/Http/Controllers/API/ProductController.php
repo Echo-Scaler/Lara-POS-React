@@ -20,8 +20,9 @@ class ProductController extends Controller
     {
         $query = Product::with('category'); // N+1 prevention
 
-        if ($request->has('search')) {
-            $query->search($request->search);
+        if ($request->has('search') && !empty($request->search)) {
+            $query->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('sku', 'like', '%' . $request->search . '%');
         }
 
         if ($request->has('category_id')) {
@@ -33,7 +34,7 @@ class ProductController extends Controller
         }
 
         if ($request->boolean('low_stock')) {
-            $query->whereColumn('stock', '<=', 'low_stock_threshold');
+            $query->where('stock', '<', 7);
         }
 
         // Pagination setup

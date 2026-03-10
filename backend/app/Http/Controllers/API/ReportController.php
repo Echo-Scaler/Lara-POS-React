@@ -34,10 +34,12 @@ class ReportController extends Controller
         $totalUsers = \App\Models\User::count();
 
         // 3. Low Stock Alerts
-        $lowStockProducts = Product::whereColumn('stock', '<=', 'low_stock_threshold')
+        $lowStockProducts = Product::where('stock', '<', 7)
             ->where('is_active', true)
             ->with('category')
             ->get();
+
+        $totalProducts = Product::count();
 
         // 4. Top Selling Products (Last 30 Days)
         $topProducts = DB::table('order_items')
@@ -78,6 +80,7 @@ class ReportController extends Controller
             'orders_today' => $ordersToday,
             'total_customers' => $totalCustomers,
             'total_users' => $totalUsers,
+            'total_products' => $totalProducts,
             'low_stock_products' => $lowStockProducts,
             'top_products' => $topProducts,
             'sales_chart' => $salesChart,
