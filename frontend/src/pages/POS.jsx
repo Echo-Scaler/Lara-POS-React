@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import {
   ShoppingCartIcon,
@@ -14,7 +13,6 @@ import {
 import { StarIcon as StarSolidIcon } from "@heroicons/react/24/solid";
 
 export default function POS() {
-  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState("");
@@ -280,7 +278,6 @@ export default function POS() {
       setOrderCounts(nextCounts);
       localStorage.setItem("order_counts", JSON.stringify(nextCounts));
       // Show Receipt Modal
-      navigate("/pos", { replace: true });
       setCompletedOrder({
         ...res.data.data,
         cartSnapshot: cart,
@@ -562,7 +559,7 @@ export default function POS() {
               className={`w-full py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white transition-all transform active:scale-[0.98] ${
                 cart.length === 0
                   ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-md"
+                  : "bg-indigo-400 hover:bg-indigo-600 hover:shadow-md"
               }`}
             >
               Checkout
@@ -581,60 +578,75 @@ export default function POS() {
         >
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div
-              className="fixed inset-0 bg-gray-900/60 backdrop-blur-md transition-opacity"
+              className="fixed inset-0 bg-gray-400/40 backdrop-blur-md transition-opacity"
               onClick={() => !isProcessing && setShowCheckout(false)}
             ></div>
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen">
               &#8203;
             </span>
 
-            <div className="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full opacity-100 translate-y-0 sm:scale-100 border border-white/30">
+            <div className="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full opacity-100 translate-y-0 sm:scale-100 border border-white/30">
               {/* Header */}
-              <div className="bg-gradient-to-br from-indigo-700 via-slate-800 to-gray-900 px-6 py-8 text-center relative overflow-hidden">
+              <div className="bg-gradient-to-br from-indigo-400 via-slate-500 to-gray-200 px-6 py-5 text-center relative overflow-hidden">
                 <div className="absolute -top-24 -right-24 w-56 h-56 bg-white/10 rounded-full blur-2xl"></div>
                 <div className="absolute -bottom-24 -left-24 w-56 h-56 bg-indigo-300/10 rounded-full blur-2xl"></div>
                 <div className="relative z-10 flex flex-col items-center">
-                  <div className="w-16 h-16 bg-white/15 backdrop-blur-sm shadow-inner rounded-2xl flex items-center justify-center mb-4 border border-white/25">
-                    <ShoppingCartIcon className="h-8 w-8 text-white" />
+                  <div className="w-12 h-12 bg-white/15 backdrop-blur-sm shadow-inner rounded-2xl flex items-center justify-center mb-3 border border-white/25">
+                    <ShoppingCartIcon className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="text-2xl font-black text-white tracking-tight">
+                  <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
                     Complete Payment
                   </h3>
-                  <p className="text-white/80 mt-1 font-semibold text-sm">
+                  <p className="text-white/75 mt-1 font-semibold text-xs sm:text-sm">
                     Review order details and select payment method below.
                   </p>
                 </div>
               </div>
 
               <form onSubmit={handleCheckout}>
-                <div className="px-6 py-6 pb-2 bg-gradient-to-b from-slate-50 to-white">
+                <div className="px-5 sm:px-6 py-5 pb-2 bg-gradient-to-b from-slate-50 to-white">
                   {/* Total Amount Badge */}
-                  <div className="rounded-2xl p-5 border border-slate-200/70 mb-6 shadow-sm bg-white">
-                    <div className="flex justify-between text-sm font-semibold text-slate-600">
-                      <span>Subtotal</span>
-                      <span>${cartSubtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm font-semibold text-slate-600 mt-1">
-                      <span>Tax (8%)</span>
-                      <span>${cartTax.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-end mt-4 pt-4 border-t border-slate-200">
-                      <span className="text-slate-500 font-extrabold uppercase tracking-wider text-xs">
-                        Total Due
-                      </span>
-                      <span className="text-4xl font-black text-gray-900 tracking-tighter">
-                        ${cartTotal.toFixed(2)}
-                      </span>
+                  <div className="rounded-2xl p-3.5 border border-slate-200/70 mb-4 shadow-sm bg-white">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2">
+                        <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                          Subtotal
+                        </div>
+                        <div className="text-sm sm:text-base font-black text-gray-900 mt-0.5">
+                          ${cartSubtotal.toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2">
+                        <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                          Tax (8%)
+                        </div>
+                        <div className="text-sm sm:text-base font-black text-gray-900 mt-0.5">
+                          ${cartTax.toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2">
+                        <div className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700">
+                          Total
+                        </div>
+                        <div className="text-base sm:text-lg font-black text-indigo-900 mt-0.5">
+                          ${cartTotal.toFixed(2)}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     {/* Payment Method Selector */}
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
-                        Select Method
-                      </label>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                          Select Method
+                        </span>
+                        <span className="text-xs font-bold text-slate-400">
+                          {paymentMethod.toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
                         {["cash", "card", "qr"].map((method) => (
                           <button
                             key={method}
@@ -644,7 +656,7 @@ export default function POS() {
                               setAmountPaid("");
                               setCardInstallments(method === "card" ? 3 : null);
                             }}
-                            className={`py-3 px-2 rounded-2xl border-2 transition-all font-extrabold text-sm tracking-wide capitalize flex flex-col items-center justify-center gap-1 ${paymentMethod === method ? "border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"}`}
+                            className={`py-2.5 px-2 rounded-2xl border-2 transition-all font-extrabold text-xs sm:text-sm tracking-wide capitalize flex flex-col items-center justify-center gap-1 ${paymentMethod === method ? "border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"}`}
                           >
                             {method === "cash"
                               ? "💵 Cash"
@@ -658,54 +670,30 @@ export default function POS() {
 
                     {/* Payment Details */}
                     {paymentMethod === "card" && (
-                      <div className="bg-white">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">
-                          Card Installments
-                        </label>
+                      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                            Installments
+                          </span>
+                          <span className="text-xs font-bold text-slate-400">
+                            {cardInstallments ? `${cardInstallments}m` : ""}
+                          </span>
+                        </div>
                         <div className="grid grid-cols-3 gap-2">
                           {[3, 6, 12].map((m) => (
                             <button
                               key={m}
                               type="button"
                               onClick={() => setCardInstallments(m)}
-                              className={`py-2 px-3 rounded-xl border text-sm font-bold ${cardInstallments === m ? "border-indigo-600 bg-indigo-50 text-indigo-700" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"}`}
+                              className={`py-2 px-3 rounded-xl border text-sm font-extrabold ${cardInstallments === m ? "border-indigo-600 bg-indigo-50 text-indigo-700" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
                             >
                               {m} months
                             </button>
                           ))}
                         </div>
                         <div className="mt-4">
-                          <label className="block text-sm font-bold text-gray-700 mb-2">
+                          <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">
                             Amount
-                          </label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min={cartTotal}
-                            required
-                            value={amountPaid}
-                            onChange={(e) => setAmountPaid(e.target.value)}
-                            className="w-full py-3 px-3 rounded-xl border-2 border-gray-100 bg-gray-50 text-right font-black text-2xl text-gray-900 focus:border-indigo-500 focus:bg-white"
-                            placeholder={cartTotal.toFixed(2)}
-                          />
-                        </div>
-                      </div>
-                    )}
-                    {paymentMethod === "qr" && (
-                      <div className="text-sm text-gray-500">
-                        Scan QR to pay the total: ${cartTotal.toFixed(2)}
-                      </div>
-                    )}
-                    {paymentMethod === "cash" && (
-                      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-                        <label className="block text-sm font-bold text-gray-700 mb-2 flex justify-between">
-                          <span>Amount Received</span>
-                        </label>
-                        <div className="relative rounded-xl shadow-inner border-2 border-gray-100 bg-gray-50 focus-within:border-indigo-500 focus-within:bg-white transition-colors overflow-hidden flex items-center mt-1">
-                          <div className="pl-5 pr-2 pointer-events-none">
-                            <span className="text-gray-400 font-bold text-2xl">
-                              $
-                            </span>
                           </div>
                           <input
                             type="number"
@@ -714,38 +702,73 @@ export default function POS() {
                             required
                             value={amountPaid}
                             onChange={(e) => setAmountPaid(e.target.value)}
-                            className="w-full py-4 pr-5 bg-transparent border-none outline-none text-right font-black text-3xl text-gray-900 focus:ring-0 placeholder-gray-300"
+                            className="w-full py-3 px-3 rounded-xl border-2 border-slate-200 bg-slate-50 text-right font-black text-2xl text-gray-900 focus:border-indigo-500 focus:bg-white"
                             placeholder={cartTotal.toFixed(2)}
                           />
                         </div>
                       </div>
                     )}
-
-                    {/* Change Due Display */}
+                    {paymentMethod === "qr" && (
+                      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+                        <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                          QR Payment
+                        </div>
+                        <div className="text-sm font-semibold text-slate-600 mt-1">
+                          Scan QR to pay total:{" "}
+                          <span className="font-black text-gray-900">
+                            ${cartTotal.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                     {paymentMethod === "cash" && (
-                      <div className="flex justify-between items-center bg-green-50 border border-green-200 p-4 rounded-xl shadow-sm">
-                        <span className="text-green-800 font-bold text-sm tracking-wide">
-                          CHANGE DUE
-                        </span>
-                        <span className="text-green-700 font-black text-2xl">
-                          $
-                          {amountPaid
-                            ? Math.max(
-                                0,
-                                parseFloat(amountPaid || "0") - cartTotal,
-                              ).toFixed(2)
-                            : "0.00"}
-                        </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+                          <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">
+                            Amount Received
+                          </div>
+                          <div className="relative rounded-xl border-2 border-slate-200 bg-slate-50 focus-within:border-indigo-500 focus-within:bg-white transition-colors overflow-hidden flex items-center">
+                            <div className="pl-4 pr-2 pointer-events-none">
+                              <span className="text-slate-400 font-black text-xl">
+                                $
+                              </span>
+                            </div>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min={cartTotal}
+                              required
+                              value={amountPaid}
+                              onChange={(e) => setAmountPaid(e.target.value)}
+                              className="w-full py-3 pr-4 bg-transparent border-none outline-none text-right font-black text-2xl text-gray-900 focus:ring-0 placeholder-slate-300"
+                              placeholder={cartTotal.toFixed(2)}
+                            />
+                          </div>
+                        </div>
+                        <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl shadow-sm flex justify-between items-center">
+                          <span className="text-emerald-800 font-extrabold text-xs uppercase tracking-wider">
+                            Change Due
+                          </span>
+                          <span className="text-emerald-700 font-black text-xl">
+                            $
+                            {amountPaid
+                              ? Math.max(
+                                  0,
+                                  parseFloat(amountPaid || "0") - cartTotal,
+                                ).toFixed(2)
+                              : "0.00"}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="px-6 py-6 pb-8 flex flex-col gap-3">
+                <div className="px-5 sm:px-6 py-5 pb-6 flex flex-col sm:flex-row-reverse gap-3">
                   <button
                     type="submit"
                     disabled={isProcessing}
-                    className="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] text-lg font-black text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-all active:scale-[0.98] transform"
+                    className="w-full sm:w-auto sm:flex-1 flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl shadow-[0_8px_20px_-6px_rgba(15,23,42,0.35)] text-base font-black text-white bg-slate-400 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900/30 disabled:opacity-50 transition-all active:scale-[0.98] transform"
                   >
                     {isProcessing ? "Processing..." : "Confirm Payment"}
                   </button>
@@ -753,7 +776,7 @@ export default function POS() {
                     type="button"
                     onClick={() => setShowCheckout(false)}
                     disabled={isProcessing}
-                    className="w-full flex justify-center items-center py-3.5 px-4 rounded-xl border border-gray-200 text-sm font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors disabled:opacity-50"
+                    className="w-full sm:w-auto flex justify-center items-center py-3.5 px-4 rounded-xl border border-slate-200 text-sm font-extrabold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors disabled:opacity-50"
                   >
                     Cancel Order
                   </button>

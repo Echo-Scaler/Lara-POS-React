@@ -79,7 +79,7 @@ class OrderController extends Controller
             }
 
             // Real calculations (tax / global discount) could be added here
-            $tax = 0;
+            $tax = round($subtotal * 0.08, 2);
             $discount_amount = 0;
             $total = $subtotal + $tax - $discount_amount;
 
