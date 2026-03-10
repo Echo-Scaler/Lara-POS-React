@@ -30,6 +30,9 @@ class ReportController extends Controller
             ->where('status', 'completed')
             ->count();
 
+        $totalCustomers = \App\Models\Customer::count();
+        $totalUsers = \App\Models\User::count();
+
         // 3. Low Stock Alerts
         $lowStockProducts = Product::whereColumn('stock', '<=', 'low_stock_threshold')
             ->where('is_active', true)
@@ -54,11 +57,30 @@ class ReportController extends Controller
             unset($tp->image);
         }
 
+        // 5. Sales Chart (Last 7 Days)
+        $days = 7;
+        $salesChart = [];
+
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $date = Carbon::today()->subDays($i);
+            $total = Order::whereDate('created_at', $date)
+                ->where('status', 'completed')
+                ->sum('total');
+
+            $salesChart[] = [
+                'date' => $date->format('M d'),
+                'total' => (float) $total
+            ];
+        }
+
         return $this->successResponse([
             'sales_today' => $salesToday,
             'orders_today' => $ordersToday,
+            'total_customers' => $totalCustomers,
+            'total_users' => $totalUsers,
             'low_stock_products' => $lowStockProducts,
             'top_products' => $topProducts,
+            'sales_chart' => $salesChart,
         ]);
     }
 

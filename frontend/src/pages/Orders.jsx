@@ -15,15 +15,25 @@ export default function Orders() {
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [paginationData, setPaginationData] = useState({});
+  const [filterDate, setFilterDate] = useState("");
+  const [filterMonth, setFilterMonth] = useState("");
+  const [filterYear, setFilterYear] = useState("");
+  const [filterTime, setFilterTime] = useState("");
 
   useEffect(() => {
     fetchOrders(currentPage);
-  }, [currentPage]);
+  }, [currentPage, filterDate, filterMonth, filterYear, filterTime]);
 
   const fetchOrders = async (page = 1) => {
     setLoading(true);
     try {
-      const res = await api.get(`/orders?page=${page}`);
+      let url = `/orders?page=${page}`;
+      if (filterDate) url += `&date=${filterDate}`;
+      if (filterMonth) url += `&month=${filterMonth}`;
+      if (filterYear) url += `&year=${filterYear}`;
+      if (filterTime) url += `&time=${filterTime}`;
+
+      const res = await api.get(url);
       setOrders(res.data.data);
       if (res.data.meta) {
         setCurrentPage(res.data.meta.current_page);
@@ -90,7 +100,92 @@ export default function Orders() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Order History</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h1 className="text-2xl font-semibold text-gray-900">Order History</h1>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Year
+            </label>
+            <input
+              type="number"
+              min="2000"
+              max="2100"
+              value={filterYear}
+              onChange={(e) => {
+                setFilterYear(e.target.value);
+                setFilterDate("");
+                setFilterMonth("");
+                setCurrentPage(1);
+              }}
+              className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="YYYY"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Month
+            </label>
+            <input
+              type="month"
+              value={filterMonth}
+              onChange={(e) => {
+                setFilterMonth(e.target.value);
+                setFilterDate("");
+                setFilterYear("");
+                setCurrentPage(1);
+              }}
+              className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Date
+            </label>
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => {
+                setFilterDate(e.target.value);
+                setFilterMonth("");
+                setFilterYear("");
+                setCurrentPage(1);
+              }}
+              className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Time (After)
+            </label>
+            <input
+              type="time"
+              value={filterTime}
+              onChange={(e) => {
+                setFilterTime(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+          {(filterDate || filterMonth || filterYear || filterTime) && (
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setFilterDate("");
+                  setFilterMonth("");
+                  setFilterYear("");
+                  setFilterTime("");
+                  setCurrentPage(1);
+                }}
+                className="py-1.5 px-3 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="bg-white shadow-sm overflow-hidden sm:rounded-xl border border-gray-200 flex flex-col">
         <ul className="divide-y divide-gray-100 flex-1">

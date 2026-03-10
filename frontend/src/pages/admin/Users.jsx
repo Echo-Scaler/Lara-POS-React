@@ -68,7 +68,11 @@ export default function Users() {
     e.preventDefault();
     try {
       const payload = { ...formData };
-      if (editId && !payload.password) delete payload.password; // Don't send empty password on update
+
+      // If editing and password is empty, completely remove it from the payload
+      if (editId && (!payload.password || payload.password.trim() === "")) {
+        delete payload.password;
+      }
 
       if (editId) {
         await api.put(`/users/${editId}`, payload);
@@ -78,7 +82,13 @@ export default function Users() {
       setShowModal(false);
       fetchUsers(currentPage);
     } catch (e) {
-      alert("Error saving user: " + (e.response?.data?.message || e.message));
+      console.error("User submission error:", e.response?.data || e);
+      alert(
+        "Error saving user: " +
+          (e.response?.data?.message ||
+            JSON.stringify(e.response?.data?.errors) ||
+            e.message),
+      );
     }
   };
 
@@ -189,7 +199,6 @@ export default function Users() {
                   </label>
                   <input
                     type="text"
-                    required
                     value={formData.name}
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
@@ -203,7 +212,6 @@ export default function Users() {
                   </label>
                   <input
                     type="email"
-                    required
                     value={formData.email}
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
@@ -216,7 +224,6 @@ export default function Users() {
                     Role
                   </label>
                   <select
-                    required
                     value={formData.role}
                     onChange={(e) =>
                       setFormData({ ...formData, role: e.target.value })
@@ -239,7 +246,6 @@ export default function Users() {
                   </label>
                   <input
                     type="password"
-                    required={!editId}
                     value={formData.password}
                     onChange={(e) =>
                       setFormData({ ...formData, password: e.target.value })

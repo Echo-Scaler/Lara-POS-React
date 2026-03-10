@@ -104,7 +104,11 @@ export default function Products() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData();
-    Object.keys(formData).forEach((key) => data.append(key, formData[key]));
+    Object.keys(formData).forEach((key) => {
+      let value = formData[key];
+      if (key === "is_active") value = value ? 1 : 0;
+      data.append(key, value);
+    });
     if (imageFile) data.append("image", imageFile);
     if (editId) data.append("_method", "PUT"); // Laravel form method spoofing
 

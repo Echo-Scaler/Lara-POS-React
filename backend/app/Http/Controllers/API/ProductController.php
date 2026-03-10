@@ -11,8 +11,6 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
 
 class ProductController extends Controller
 {
@@ -98,20 +96,14 @@ class ProductController extends Controller
     }
 
     /**
-     * Handle Image Upload and Resize using Intervention Image v3
+     * Handle Image Upload natively
      */
     private function handleImageUpload($file)
     {
-        $manager = new ImageManager(new Driver());
-        $image = $manager->read($file);
+        $filename = 'products/' . Str::random(40) . '.' . $file->getClientOriginalExtension();
 
-        // Resize image
-        $image->scale(width: 800);
-
-        $filename = 'products/' . Str::random(40) . '.jpg';
-
-        // Save to public storage
-        Storage::disk('public')->put($filename, (string) $image->toJpeg(80));
+        // Save to public storage natively
+        Storage::disk('public')->put($filename, file_get_contents($file));
 
         return $filename;
     }

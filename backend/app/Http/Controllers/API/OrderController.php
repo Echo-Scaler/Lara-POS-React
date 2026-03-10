@@ -25,8 +25,26 @@ class OrderController extends Controller
             $query->where('status', $request->status);
         }
 
-        if ($request->has('date')) {
+        if ($request->filled('date')) {
             $query->forDate($request->date);
+        }
+
+        if ($request->filled('month')) {
+            $parts = explode('-', $request->month);
+            if (count($parts) == 2) {
+                $query->whereYear('created_at', $parts[0])
+                    ->whereMonth('created_at', $parts[1]);
+            } else {
+                $query->whereMonth('created_at', $request->month);
+            }
+        }
+
+        if ($request->filled('year')) {
+            $query->whereYear('created_at', $request->year);
+        }
+
+        if ($request->filled('time')) {
+            $query->whereTime('created_at', '>=', $request->time);
         }
 
         $orders = $query->latest()->paginate($request->get('per_page', 10));
