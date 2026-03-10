@@ -222,6 +222,7 @@ class OrderController extends Controller
             fputcsv($file, ['Status', ucfirst($order->status)]);
             fputcsv($file, ['Subtotal', '$' . number_format($order->subtotal, 2)]);
             fputcsv($file, ['Discount', '$' . number_format($order->discount_amount, 2)]);
+            fputcsv($file, ['Tax (8%)', '$' . number_format($order->tax, 2)]);
             fputcsv($file, ['Total', '$' . number_format($order->total, 2)]);
             fputcsv($file, []);
 

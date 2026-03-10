@@ -149,7 +149,18 @@ export default function Orders() {
       })
       .join("");
 
-    const total = Number(order.total ?? 0).toFixed(2);
+    const subtotalAmount = Number(order.subtotal ?? 0);
+    const discountAmount = Number(order.discount_amount ?? 0);
+    let taxAmount = Number(order.tax);
+    if (!Number.isFinite(taxAmount)) {
+      taxAmount = Math.round(subtotalAmount * 0.08 * 100) / 100;
+    }
+    const totalAmount = Number(order.total ?? subtotalAmount + taxAmount - discountAmount);
+
+    const subtotal = subtotalAmount.toFixed(2);
+    const discount = discountAmount.toFixed(2);
+    const tax = taxAmount.toFixed(2);
+    const total = totalAmount.toFixed(2);
     const orderNo = String(order.order_no ?? "");
     const createdAt = order.created_at
       ? new Date(order.created_at).toLocaleString()
@@ -189,9 +200,25 @@ export default function Orders() {
                 </table>
               </div>
 
-              <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; color: #111827;">
-                <div>Total</div>
-                <div>$${total}</div>
+              <div style="border-top: 1px dashed #d1d5db; padding-top: 10px; margin-top: 6px;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #4b5563;">
+                  <div>Subtotal</div>
+                  <div>$${subtotal}</div>
+                </div>
+                ${discountAmount > 0 ? `
+                  <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #4b5563; margin-top: 4px;">
+                    <div>Discount</div>
+                    <div>-$${discount}</div>
+                  </div>
+                ` : ""}
+                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #4b5563; margin-top: 4px;">
+                  <div>Tax (8%)</div>
+                  <div>$${tax}</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 900; color: #111827; margin-top: 8px;">
+                  <div>Total</div>
+                  <div>$${total}</div>
+                </div>
               </div>
 
               <div style="text-align: center; margin-top: 14px; font-size: 12px; color: #6b7280; font-weight: 600;">
@@ -214,27 +241,6 @@ export default function Orders() {
     } catch (e) {
       console.error(e);
       alert("Failed to download receipt.");
-    }
-  };
-
-  const handleDownloadPdf = async (orderId, orderNo) => {
-    try {
-      const response = await api.get(`/orders/${orderId}/pdf`, {
-        responseType: "blob",
-        headers: { Accept: "application/pdf" },
-      });
-      const contentType = response.headers["content-type"] || "";
-      if (!contentType.includes("pdf")) {
-        throw new Error("Server did not return a PDF file");
-      }
-      const normalizedType = contentType.split(";")[0] || "application/pdf";
-      downloadBlob(
-        new Blob([response.data], { type: normalizedType }),
-        `order-${orderNo}.pdf`,
-      );
-    } catch (error) {
-      console.error("Error downloading PDF:", error);
-      handleDownloadReceipt(orderId, orderNo);
     }
   };
 
@@ -333,16 +339,6 @@ export default function Orders() {
                     <span className="inline-flex items-center gap-1">
                       <ArrowDownTrayIcon className="h-5 w-5" />
                       <span className="text-xs font-bold">CSV</span>
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => handleDownloadPdf(order.id, order.order_no)}
-                    className="text-gray-400 hover:text-red-600 transition-colors p-2"
-                    title="Export PDF"
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      <ArrowDownTrayIcon className="h-5 w-5" />
-                      <span className="text-xs font-bold">PDF</span>
                     </span>
                   </button>
                   <button
@@ -452,6 +448,17 @@ export default function Orders() {
                     </span>
                   </div>
                 )}
+                <div className="flex justify-between py-1">
+                  <span className="text-gray-500">Tax (8%):</span>
+                  <span>
+                    $
+                    {(
+                      Number.isFinite(Number(selectedOrder.tax))
+                        ? Number(selectedOrder.tax)
+                        : Number(selectedOrder.subtotal) * 0.08
+                    ).toFixed(2)}
+                  </span>
+                </div>
                 <div className="flex justify-between py-1 text-lg font-bold border-t mt-2 pt-2">
                   <span>Total:</span>
                   <span>${parseFloat(selectedOrder.total).toFixed(2)}</span>
