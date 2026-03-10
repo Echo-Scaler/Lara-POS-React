@@ -1,0 +1,81 @@
+I am building a POS (Point of Sale) system. 
+I already have a basic inventory movement log that records stock changes when orders are created.
+
+I want to improve the inventory movement system to make it more powerful and professional like a real supermarket POS.
+
+Please implement the following features:
+
+1. Inventory Movement Types
+Support different types of stock movements:
+- sale (stock decrease)
+- purchase (stock increase)
+- return
+- adjustment
+- transfer
+
+2. Movement History
+Each movement record must store:
+- product_id
+- SKU
+- movement_type
+- quantity_change
+- stock_before
+- stock_after
+- reference_id (order or purchase id)
+- reason
+- user_id
+- store_id
+- created_at
+
+3. Reference Links
+Inventory movements should be linked to:
+- orders
+- purchase orders
+- stock adjustments
+
+Example:
+Sale from Order #ORD-20260309-0002
+
+4. User Tracking
+Record which user performed the action:
+- cashier
+- manager
+- admin
+
+5. Inventory Timeline
+Display inventory movements in a timeline format sorted by date.
+
+Example:
+09:15 SALE -1 Cashier
+08:50 SALE -2 Cashier
+08:10 PURCHASE +50 Manager
+
+6. Filters
+Allow filtering inventory movement by:
+- product
+- date
+- movement type
+- user
+- store location
+- order id
+
+7. Low Stock Alerts
+If product quantity goes below minimum stock, trigger a warning.
+
+8. Dashboard Analytics
+Create charts showing:
+- daily sales movement
+- daily purchase movement
+- current stock levels
+
+9. Audit Trail
+Track all stock changes to prevent fraud or mistakes.
+
+10. Reversal / Undo
+Allow reversing a movement when an order is cancelled.
+
+Please design:
+- database structure
+- backend logic
+- API endpoints
+- frontend UI display

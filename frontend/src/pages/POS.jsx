@@ -8,6 +8,7 @@ import {
   PauseIcon,
   PlayIcon,
   PrinterIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 
 export default function POS() {
@@ -296,43 +297,77 @@ export default function POS() {
                   <div
                     key={product.id}
                     onClick={() => addToCart(product)}
-                    className={`bg-white rounded-xl shadow-sm border p-4 cursor-pointer transition-all hover:shadow-md hover:border-indigo-400 hover:-translate-y-0.5 flex flex-col ${product.stock === 0 ? "opacity-50 ring-2 ring-red-400" : ""}`}
+                    className={`relative group bg-white rounded-2xl shadow-[0_2px_8px_-3px_rgba(0,0,0,0.1)] border border-gray-100 p-3 pb-4 cursor-pointer transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] hover:-translate-y-1 overflow-hidden flex flex-col ${product.stock === 0 ? "opacity-50 grayscale select-none" : "hover:border-indigo-300"}`}
                   >
-                    <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-100 mb-3 h-32 flex items-center justify-center relative">
+                    {/* Hover Add Overlay for intuitive interaction */}
+                    {product.stock > 0 && (
+                      <div className="absolute inset-0 bg-indigo-600/0 group-hover:bg-indigo-600/5 transition-colors duration-300 z-10 pointer-events-none flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <div className="bg-indigo-600 text-white p-3 rounded-full shadow-lg transform scale-50 group-hover:scale-100 transition-transform duration-300 ease-out">
+                          <PlusIcon className="w-6 h-6" />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-xl bg-gray-50 mb-4 h-36 flex items-center justify-center relative border border-gray-100/50">
                       {product.image_url ? (
                         <img
                           src={product.image_url}
-                          alt=""
-                          className="h-full w-full object-cover"
+                          alt={product.name}
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                         />
                       ) : (
-                        <span className="text-gray-400 text-sm font-medium">
+                        <span className="text-gray-400 text-sm font-medium tracking-wide">
                           No Image
                         </span>
                       )}
-                      {product.stock <= 5 && product.stock > 0 && (
-                        <span className="absolute top-2 right-2 bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-0.5 rounded shadow-sm">
-                          Low: {product.stock}
-                        </span>
-                      )}
+
+                      {/* Dynamic Stock Badge */}
+                      <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                        {product.stock === 0 ? (
+                          <span className="bg-red-500/90 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-sm">
+                            Out of Stock
+                          </span>
+                        ) : product.stock <= 5 ? (
+                          <span className="bg-amber-500/90 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-sm animate-pulse">
+                            Low: {product.stock}
+                          </span>
+                        ) : (
+                          <span className="bg-emerald-500/90 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                            {product.stock} in stock
+                          </span>
+                        )}
+
+                        {product.discount > 0 && (
+                          <span className="bg-rose-500/90 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-sm">
+                            {product.discount}% OFF
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-sm font-bold text-gray-900 leading-tight line-clamp-2">
-                        {product.name}
-                      </h3>
-                      <p className="mt-1 text-xs text-gray-500 font-medium">
-                        Stock: {product.stock}
-                      </p>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="text-lg font-black text-indigo-600">
-                        ${parseFloat(product.discounted_price).toFixed(2)}
-                      </span>
-                      {product.discount > 0 && (
-                        <span className="text-xs text-gray-400 font-medium line-through">
-                          ${parseFloat(product.price).toFixed(2)}
-                        </span>
-                      )}
+
+                    <div className="flex-1 px-1 flex flex-col justify-between relative z-20">
+                      <div>
+                        <h3 className="text-[13px] sm:text-sm font-bold text-gray-800 leading-snug line-clamp-2 min-h-[40px]">
+                          {product.name}
+                        </h3>
+                      </div>
+                      <div className="mt-3 flex items-end justify-between items-center bg-gray-50/50 p-2 rounded-lg border border-gray-50">
+                        <div className="flex flex-col">
+                          {product.discount > 0 && (
+                            <span className="text-[10px] text-gray-400 font-bold line-through ml-0.5">
+                              ${parseFloat(product.price).toFixed(2)}
+                            </span>
+                          )}
+                          <span className="text-base sm:text-lg font-black tracking-tight text-indigo-600 leading-none">
+                            ${parseFloat(product.discounted_price).toFixed(2)}
+                          </span>
+                        </div>
+                        {product.category && (
+                          <span className="text-[10px] uppercase font-bold text-gray-400 truncate max-w-[80px]">
+                            {product.category.name}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
