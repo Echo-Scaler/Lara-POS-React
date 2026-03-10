@@ -37,13 +37,17 @@ class Order extends Model
         ];
     }
 
-    public static function generateOrderNo(): string
+    public static function generateOrderNo($dateString = null): string
     {
         $prefix = 'ORD';
-        $date   = now()->format('Ymd');
-        $count  = static::whereDate('created_at', today())->count() + 1;
+        $dateObj = $dateString ? \Carbon\Carbon::parse($dateString) : now();
+        $date   = $dateObj->format('Ymd');
+
+        $count  = static::whereDate('created_at', $dateObj->toDateString())->count() + 1;
+
         return sprintf('%s-%s-%04d', $prefix, $date, $count);
     }
+
 
     // Relationships
     public function customer(): BelongsTo

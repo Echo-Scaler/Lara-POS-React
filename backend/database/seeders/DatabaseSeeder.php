@@ -8,93 +8,142 @@ use App\Models\User;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Customer;
-use Illuminate\Support\Str;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Payment;
+use App\Models\InventoryMovement;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Users
-        User::create([
+        // 1. Create Default Users (so you can log in)
+        $admin = User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@pos.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
 
-        User::create([
+        $manager = User::factory()->create([
             'name' => 'Manager User',
             'email' => 'manager@pos.com',
             'password' => Hash::make('password'),
             'role' => 'manager',
         ]);
 
-        User::create([
+        $cashier = User::factory()->create([
             'name' => 'Cashier One',
             'email' => 'cashier@pos.com',
             'password' => Hash::make('password'),
             'role' => 'cashier',
         ]);
 
-        // 2. Categories
-        $categories = [
-            'Beverages',
-            'Snacks',
-            'Dairy',
-            'Produce',
-            'Meat',
-            'Bakery'
-        ];
+        // Generate some extra random users
+        User::factory(5)->create(['role' => 'cashier']);
 
-        foreach ($categories as $cat) {
-            Category::create([
-                'name' => $cat,
-                'slug' => Str::slug($cat),
-                'is_active' => true,
-            ]);
-        }
-
-        // 3. Products
-        $products = [
-            ['name' => 'Coca Cola 2L', 'price' => 2.50, 'cost_price' => 1.50, 'stock' => 100, 'category_id' => 1],
-            ['name' => 'Orange Juice', 'price' => 3.00, 'cost_price' => 1.80, 'stock' => 50, 'category_id' => 1],
-            ['name' => 'Potato Chips', 'price' => 1.50, 'cost_price' => 0.80, 'stock' => 200, 'category_id' => 2],
-            ['name' => 'Chocolate Bar', 'price' => 1.20, 'cost_price' => 0.50, 'stock' => 150, 'category_id' => 2],
-            ['name' => 'Whole Milk 1L', 'price' => 1.00, 'cost_price' => 0.60, 'stock' => 40, 'category_id' => 3],
-            ['name' => 'Apples 1kg', 'price' => 4.00, 'cost_price' => 2.00, 'stock' => 30, 'category_id' => 4],
-            ['name' => 'Chicken Breast 1kg', 'price' => 8.00, 'cost_price' => 5.00, 'stock' => 20, 'category_id' => 5],
-            ['name' => 'Baguette', 'price' => 1.20, 'cost_price' => 0.40, 'stock' => 40, 'category_id' => 6],
-            ['name' => 'Low Stock Item test', 'price' => 10.00, 'cost_price' => 5.00, 'stock' => 2, 'category_id' => 2],
-        ];
-
-        foreach ($products as $i => $prod) {
-            Product::create([
-                'name' => $prod['name'],
-                'sku' => 'SKU-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
-                'barcode' => '89012345' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
-                'category_id' => $prod['category_id'],
-                'price' => $prod['price'],
-                'cost_price' => $prod['cost_price'],
-                'stock' => $prod['stock'],
-                'discount' => 0,
-                'is_active' => true,
-            ]);
-        }
-
-        // 4. Customers
-        Customer::create([
+        // 2. Default Walk-in Customer
+        Customer::factory()->create([
             'name' => 'Walk-in Customer',
             'phone' => null,
             'email' => null,
         ]);
 
-        Customer::create([
-            'name' => 'John Doe',
-            'phone' => '1234567890',
-            'email' => 'john@example.com',
-            'loyalty_points' => 150,
-        ]);
+        // Generate more random customers
+        Customer::factory(20)->create();
 
-        echo "Database Seeder Completed successfully.\n";
+        // 3. Categories and Products using Factories
+        // Generate 10 categories, each containing 15-30 products
+        Category::factory(10)->create()->each(function (Category $category) {
+            Product::factory(rand(15, 30))->create([
+                'category_id' => $category->id
+            ]);
+        });
+
+        // 4. Optionally: create some random previous orders for historical data
+        $this->createHistoricalOrders($cashier);
+
+        echo "Database Seeder With Factories Completed successfully.\n";
+    }
+
+    private function createHistoricalOrders(User $cashier): void
+    {
+        $products = Product::inRandomOrder()->take(50)->get();
+        $customers = Customer::all();
+
+        // Create 30 historical orders
+        for ($i = 0; $i < 30; $i++) {
+            $customer = $customers->random();
+            $orderDate = fake()->dateTimeBetween('-30 days', 'now');
+
+            // Pick 1 to 5 random products for this order
+            $orderProducts = $products->random(rand(1, 5));
+            $subtotal = 0;
+
+            $order = Order::create([
+                'order_no' => Order::generateOrderNo($orderDate->format('Y-m-d H:i:s')),
+                'customer_id' => fake()->boolean(70) ? $customer->id : null, // 70% chance of customer, else walk-in
+                'user_id' => $cashier->id,
+                'subtotal' => 0, // will be calculated below
+                'discount_amount' => 0,
+                'tax' => 0,
+                'total' => 0,
+                'status' => 'completed',
+                'paid_at' => $orderDate,
+                'created_at' => $orderDate,
+                'updated_at' => $orderDate,
+            ]);
+
+            foreach ($orderProducts as $product) {
+                $qty = rand(1, 4);
+                $itemSubtotal = $product->discounted_price * $qty;
+                $subtotal += $itemSubtotal;
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'product_sku' => $product->sku,
+                    'quantity' => $qty,
+                    'price' => $product->price,
+                    'discount' => $product->discount,
+                    'subtotal' => $itemSubtotal,
+                    'created_at' => $orderDate,
+                    'updated_at' => $orderDate,
+                ]);
+
+                // Create inventory movement
+                InventoryMovement::create([
+                    'product_id' => $product->id,
+                    'user_id' => $cashier->id,
+                    'order_id' => $order->id,
+                    'type' => 'sale',
+                    'quantity' => $qty,
+                    'stock_before' => $product->stock + $qty, // Approximate
+                    'stock_after' => $product->stock,
+                    'description' => "Sale from historical order #{$order->order_no}",
+                    'created_at' => $orderDate,
+                    'updated_at' => $orderDate,
+                ]);
+            }
+
+            // Update order totals
+            $order->update([
+                'subtotal' => $subtotal,
+                'total' => $subtotal,
+            ]);
+
+            // Add payment
+            Payment::create([
+                'order_id' => $order->id,
+                'amount' => $subtotal,
+                'change' => 0,
+                'method' => fake()->randomElement(['cash', 'card', 'qr']),
+                'reference' => null,
+                'paid_at' => $orderDate,
+                'created_at' => $orderDate,
+                'updated_at' => $orderDate,
+            ]);
+        }
     }
 }
