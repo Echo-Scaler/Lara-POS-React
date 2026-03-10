@@ -11,8 +11,9 @@ export default function Payments() {
 
   const fetchPayments = async () => {
     try {
-      const res = await api.get("/payments");
-      setPayments(res.data.data);
+      // Laravel pagination wraps the array in an extra 'data' property
+      const responseData = res.data.data;
+      setPayments(responseData.data ? responseData.data : responseData);
     } catch (e) {
       console.error(e);
     } finally {

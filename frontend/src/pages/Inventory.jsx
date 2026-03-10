@@ -12,8 +12,9 @@ export default function Inventory() {
 
   const fetchMovements = async () => {
     try {
-      const res = await api.get("/inventory");
-      setMovements(res.data.data);
+      // Laravel pagination wraps the array in an extra 'data' property
+      const responseData = res.data.data;
+      setMovements(responseData.data ? responseData.data : responseData);
     } catch (e) {
       console.error(e);
     } finally {

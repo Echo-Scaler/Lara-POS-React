@@ -87,12 +87,12 @@ class OrderController extends Controller
             $order = Order::create([
                 'order_no' => Order::generateOrderNo(),
                 'user_id' => $user->id,
-                'customer_id' => $data['customer_id'],
+                'customer_id' => $data['customer_id'] ?? null,
                 'subtotal' => $subtotal,
                 'discount_amount' => $discount_amount,
                 'tax' => $tax,
                 'total' => $total,
-                'notes' => $data['notes'],
+                'notes' => $data['notes'] ?? null,
                 'status' => 'completed',
                 'paid_at' => now(),
             ]);
