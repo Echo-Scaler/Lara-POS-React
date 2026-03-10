@@ -6,6 +6,7 @@ import {
   ClipboardDocumentListIcon,
   ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
+import { useAuth } from "../contexts/AuthContext";
 import Pagination from "../components/Pagination";
 
 export default function Orders() {
@@ -17,10 +18,33 @@ export default function Orders() {
   const [paginationData, setPaginationData] = useState({});
   const [filterDate, setFilterDate] = useState("");
   const [filterTime, setFilterTime] = useState("");
+  const [searchTrigger, setSearchTrigger] = useState(0);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Invalid Date";
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Invalid Date";
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  };
 
   useEffect(() => {
     fetchOrders(currentPage);
-  }, [currentPage, filterDate, filterTime]);
+  }, [currentPage, searchTrigger]);
 
   const fetchOrders = async (page = 1) => {
     setLoading(true);
@@ -106,10 +130,7 @@ export default function Orders() {
             <input
               type="date"
               value={filterDate}
-              onChange={(e) => {
-                setFilterDate(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(e) => setFilterDate(e.target.value)}
               className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
@@ -120,27 +141,34 @@ export default function Orders() {
             <input
               type="time"
               value={filterTime}
-              onChange={(e) => {
-                setFilterTime(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(e) => setFilterTime(e.target.value)}
               className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
-          {(filterDate || filterTime) && (
-            <div className="flex items-end">
+          <div className="flex items-end gap-2">
+            <button
+              onClick={() => {
+                setCurrentPage(1);
+                setSearchTrigger((prev) => prev + 1);
+              }}
+              className="py-1.5 px-4 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Search
+            </button>
+            {(filterDate || filterTime) && (
               <button
                 onClick={() => {
                   setFilterDate("");
                   setFilterTime("");
                   setCurrentPage(1);
+                  setSearchTrigger((prev) => prev + 1);
                 }}
                 className="py-1.5 px-3 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none"
               >
                 Clear
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -154,7 +182,7 @@ export default function Orders() {
                     Order: {order.order_no}
                   </p>
                   <p className="mt-1 text-sm text-gray-500">
-                    {new Date(order.created_at).toLocaleString()} · Cashier:{" "}
+                    {formatDateTime(order.created_at)} · Cashier:{" "}
                     {order.user.name}
                   </p>
                 </div>
@@ -229,7 +257,7 @@ export default function Orders() {
                     Order {selectedOrder.order_no}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    {new Date(selectedOrder.created_at).toLocaleString()}
+                    {formatDateTime(selectedOrder.created_at)}
                   </p>
                 </div>
                 <span

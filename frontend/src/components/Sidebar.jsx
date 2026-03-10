@@ -66,7 +66,12 @@ const Sidebar = () => {
       icon: TagIcon,
       roles: ["admin", "manager"],
     },
-    { name: "Users", path: "/admin/users", icon: UsersIcon, roles: ["admin"] },
+    {
+      name: "Users",
+      path: "/admin/users",
+      icon: UsersIcon,
+      roles: ["admin", "manager"],
+    },
   ];
 
   const filterNav = (items) =>

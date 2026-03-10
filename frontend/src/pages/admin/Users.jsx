@@ -83,12 +83,12 @@ export default function Users() {
       fetchUsers(currentPage);
     } catch (e) {
       console.error("User submission error:", e.response?.data || e);
-      alert(
-        "Error saving user: " +
-          (e.response?.data?.message ||
-            JSON.stringify(e.response?.data?.errors) ||
-            e.message),
-      );
+      let errorMsg = e.response?.data?.message || e.message;
+      if (e.response?.data?.errors) {
+        const errors = e.response.data.errors;
+        errorMsg += "\n" + Object.values(errors).flat().join("\n");
+      }
+      alert("Error saving user:\n" + errorMsg);
     }
   };
 
