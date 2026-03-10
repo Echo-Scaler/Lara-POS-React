@@ -29,20 +29,6 @@ class OrderController extends Controller
             $query->forDate($request->date);
         }
 
-        if ($request->filled('month')) {
-            $parts = explode('-', $request->month);
-            if (count($parts) == 2) {
-                $query->whereYear('created_at', $parts[0])
-                    ->whereMonth('created_at', $parts[1]);
-            } else {
-                $query->whereMonth('created_at', $request->month);
-            }
-        }
-
-        if ($request->filled('year')) {
-            $query->whereYear('created_at', $request->year);
-        }
-
         if ($request->filled('time')) {
             $query->whereTime('created_at', '>=', $request->time);
         }

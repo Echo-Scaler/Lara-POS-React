@@ -13,12 +13,11 @@ class UpdateProductRequest extends FormRequest
 
     public function rules(): array
     {
-        $id = $this->route('product')->id;
 
         return [
             'name' => 'sometimes|string|max:255',
-            'sku' => 'sometimes|string|max:255|unique:products,sku,' . $id,
-            'barcode' => 'nullable|string|max:255|unique:products,barcode,' . $id,
+            'sku' => ['sometimes', 'string', 'max:255', \Illuminate\Validation\Rule::unique('products')->ignore($this->route('product'))],
+            'barcode' => ['nullable', 'string', 'max:255', \Illuminate\Validation\Rule::unique('products')->ignore($this->route('product'))],
             'category_id' => 'sometimes|exists:categories,id',
             'price' => 'sometimes|numeric|min:0',
             'cost_price' => 'sometimes|numeric|min:0',

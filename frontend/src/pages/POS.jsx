@@ -467,7 +467,7 @@ export default function POS() {
         </div>
       </div>
 
-      {/* Checkout Modal */}
+      {/* Modern Checkout Modal */}
       {showCheckout && (
         <div
           className="fixed inset-0 z-50 overflow-y-auto print:hidden"
@@ -475,110 +475,135 @@ export default function POS() {
           role="dialog"
           aria-modal="true"
         >
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div
-              className="fixed inset-0 bg-gray-900 bg-opacity-40 backdrop-blur-sm transition-opacity"
+              className="fixed inset-0 bg-gray-900/60 backdrop-blur-md transition-opacity"
               onClick={() => !isProcessing && setShowCheckout(false)}
             ></div>
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen">
               &#8203;
             </span>
-            <div className="inline-block align-bottom bg-white rounded-2xl pt-5 pb-4 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full sm:p-6 opacity-100 translate-y-0 sm:scale-100 border border-gray-100">
-              <form onSubmit={handleCheckout}>
-                <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <ShoppingCartIcon className="h-6 w-6 text-indigo-600" />
-                  </div>
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                    <h3 className="text-lg leading-6 font-bold text-gray-900">
-                      Complete Payment
-                    </h3>
 
-                    <div className="mt-4 bg-gray-50/80 p-5 rounded-xl border border-gray-100">
-                      <div className="flex justify-between items-center text-xl font-black text-gray-900 mb-5 pb-3 border-b border-gray-200">
-                        <span className="text-gray-500 font-medium text-base">
-                          Total Due:
-                        </span>
-                        <span>${cartTotal.toFixed(2)}</span>
+            <div className="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full opacity-100 translate-y-0 sm:scale-100 border border-white/20">
+              {/* Header */}
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 px-6 py-8 text-center relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm shadow-inner rounded-full flex items-center justify-center mb-4 border border-white/30">
+                    <ShoppingCartIcon className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-black text-white tracking-tight">
+                    Complete Payment
+                  </h3>
+                  <p className="text-gray-300 mt-1 font-medium text-sm text-balance">
+                    Review order details and select payment method below.
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleCheckout}>
+                <div className="px-6 py-6 pb-2">
+                  {/* Total Amount Badge */}
+                  <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 mb-6 flex items-center justify-between shadow-sm">
+                    <span className="text-gray-500 font-bold uppercase tracking-wider text-xs">
+                      Total Due
+                    </span>
+                    <span className="text-4xl font-black text-gray-900 tracking-tighter">
+                      ${cartTotal.toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Payment Method Selector */}
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                        Select Method
+                      </label>
+                      <div className="grid grid-cols-3 gap-3">
+                        {["cash", "card", "qr"].map((method) => (
+                          <button
+                            key={method}
+                            type="button"
+                            onClick={() => setPaymentMethod(method)}
+                            className={`py-3 px-2 rounded-xl border-2 transition-all font-bold text-sm tracking-wide capitalize flex flex-col items-center justify-center gap-1 ${paymentMethod === method ? "border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm transform scale-[1.02]" : "border-gray-100 bg-white text-gray-500 hover:border-gray-200 hover:bg-gray-50"}`}
+                          >
+                            {method === "cash"
+                              ? "💵 Cash"
+                              : method === "card"
+                                ? "💳 Card"
+                                : "📱 QR Code"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Amount Received Input */}
+                    <div className="bg-white">
+                      <label className="block text-sm font-bold text-gray-700 mb-2 flex justify-between">
+                        <span>Amount Received</span>
+                      </label>
+
+                      {/* Fast Cash Buttons */}
+                      <div
+                        className={`transition-all overflow-hidden ${paymentMethod === "cash" ? "max-h-20 mb-3 opacity-100" : "max-h-0 opacity-0 m-0"}`}
+                      >
+                        <div className="flex flex-wrap gap-2">
+                          {fastCashAmounts.map((amount) => (
+                            <button
+                              key={amount}
+                              type="button"
+                              onClick={() => setAmountPaid(amount.toString())}
+                              className="flex-1 min-w-[70px] py-2 px-3 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 shadow-sm text-sm font-black rounded-xl border border-indigo-100 transition-all active:scale-95"
+                            >
+                              ${amount.toFixed(2).replace(/\.00$/, "")}
+                            </button>
+                          ))}
+                        </div>
                       </div>
 
-                      <div className="space-y-5">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                            Payment Method
-                          </label>
-                          <select
-                            value={paymentMethod}
-                            onChange={(e) => setPaymentMethod(e.target.value)}
-                            className="block w-full pl-3 pr-10 py-2.5 bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg shadow-sm border font-medium cursor-pointer"
-                          >
-                            <option value="cash">Cash</option>
-                            <option value="card">Credit Card</option>
-                            <option value="qr">QR / Mobile Wallet</option>
-                          </select>
+                      <div className="relative rounded-xl shadow-inner border-2 border-gray-100 bg-gray-50 focus-within:border-indigo-500 focus-within:bg-white transition-colors overflow-hidden flex items-center mt-1">
+                        <div className="pl-5 pr-2 pointer-events-none">
+                          <span className="text-gray-400 font-bold text-2xl">
+                            $
+                          </span>
                         </div>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min={cartTotal}
+                          required
+                          value={amountPaid}
+                          onChange={(e) => setAmountPaid(e.target.value)}
+                          className="w-full py-4 pr-5 bg-transparent border-none outline-none text-right font-black text-3xl text-gray-900 focus:ring-0 placeholder-gray-300"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </div>
 
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                            Amount Received ($)
-                          </label>
-
-                          {/* Fast Cash Buttons */}
-                          {paymentMethod === "cash" && (
-                            <div className="flex flex-wrap gap-2 mb-3">
-                              {fastCashAmounts.map((amount) => (
-                                <button
-                                  key={amount}
-                                  type="button"
-                                  onClick={() =>
-                                    setAmountPaid(amount.toString())
-                                  }
-                                  className="flex-1 min-w-[60px] py-1.5 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-md border border-indigo-200 transition-colors"
-                                >
-                                  ${amount.toFixed(2).replace(/\.00$/, "")}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-
-                          <div className="mt-1 relative rounded-lg shadow-sm border border-gray-300 bg-white">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                              <span className="text-gray-500 font-semibold text-lg">
-                                $
-                              </span>
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              min={cartTotal}
-                              required
-                              value={amountPaid}
-                              onChange={(e) => setAmountPaid(e.target.value)}
-                              className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-8 py-3.5 pr-4 text-xl font-bold bg-transparent border-none rounded-lg outline-none"
-                              placeholder="0.00"
-                            />
-                          </div>
-                        </div>
-
-                        {amountPaid && parseFloat(amountPaid) >= cartTotal && (
-                          <div className="flex justify-between items-center text-lg font-bold text-green-600 pt-3 mt-2 border-t border-gray-200">
-                            <span className="text-green-800/70 text-base font-semibold">
-                              Change Due:
-                            </span>
-                            <span className="bg-green-100 px-3 py-1 rounded-md">
-                              ${(parseFloat(amountPaid) - cartTotal).toFixed(2)}
-                            </span>
-                          </div>
-                        )}
+                    {/* Change Due Display */}
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ease-in-out ${amountPaid && parseFloat(amountPaid) >= cartTotal ? "max-h-20 opacity-100 translate-y-0" : "max-h-0 opacity-0 translate-y-4"}`}
+                    >
+                      <div className="flex justify-between items-center bg-green-50 border border-green-200 p-4 rounded-xl shadow-sm">
+                        <span className="text-green-800 font-bold text-sm tracking-wide">
+                          CHANGE DUE
+                        </span>
+                        <span className="text-green-700 font-black text-2xl">
+                          $
+                          {amountPaid
+                            ? (parseFloat(amountPaid) - cartTotal).toFixed(2)
+                            : "0.00"}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="mt-6 sm:mt-5 sm:flex sm:flex-row-reverse gap-3">
+
+                <div className="px-6 py-6 pb-8 flex flex-col gap-3">
                   <button
                     type="submit"
                     disabled={isProcessing}
-                    className="w-full inline-flex justify-center items-center rounded-lg border border-transparent shadow-md px-6 py-2.5 bg-indigo-600 text-base font-bold text-white hover:bg-indigo-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto sm:text-sm disabled:opacity-50 transition-all active:scale-[0.98]"
+                    className="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] text-lg font-black text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-all active:scale-[0.98] transform"
                   >
                     {isProcessing ? "Processing..." : "Confirm Payment"}
                   </button>
@@ -586,9 +611,9 @@ export default function POS() {
                     type="button"
                     onClick={() => setShowCheckout(false)}
                     disabled={isProcessing}
-                    className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-6 py-2.5 bg-white text-base font-bold text-gray-700 hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm disabled:opacity-50 transition-colors"
+                    className="w-full flex justify-center items-center py-3.5 px-4 rounded-xl border border-gray-200 text-sm font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors disabled:opacity-50"
                   >
-                    Cancel
+                    Cancel Order
                   </button>
                 </div>
               </form>

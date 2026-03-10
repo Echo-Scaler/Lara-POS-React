@@ -16,21 +16,17 @@ export default function Orders() {
   const [lastPage, setLastPage] = useState(1);
   const [paginationData, setPaginationData] = useState({});
   const [filterDate, setFilterDate] = useState("");
-  const [filterMonth, setFilterMonth] = useState("");
-  const [filterYear, setFilterYear] = useState("");
   const [filterTime, setFilterTime] = useState("");
 
   useEffect(() => {
     fetchOrders(currentPage);
-  }, [currentPage, filterDate, filterMonth, filterYear, filterTime]);
+  }, [currentPage, filterDate, filterTime]);
 
   const fetchOrders = async (page = 1) => {
     setLoading(true);
     try {
       let url = `/orders?page=${page}`;
       if (filterDate) url += `&date=${filterDate}`;
-      if (filterMonth) url += `&month=${filterMonth}`;
-      if (filterYear) url += `&year=${filterYear}`;
       if (filterTime) url += `&time=${filterTime}`;
 
       const res = await api.get(url);
@@ -105,41 +101,6 @@ export default function Orders() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              Year
-            </label>
-            <input
-              type="number"
-              min="2000"
-              max="2100"
-              value={filterYear}
-              onChange={(e) => {
-                setFilterYear(e.target.value);
-                setFilterDate("");
-                setFilterMonth("");
-                setCurrentPage(1);
-              }}
-              className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              placeholder="YYYY"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Month
-            </label>
-            <input
-              type="month"
-              value={filterMonth}
-              onChange={(e) => {
-                setFilterMonth(e.target.value);
-                setFilterDate("");
-                setFilterYear("");
-                setCurrentPage(1);
-              }}
-              className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
               Date
             </label>
             <input
@@ -147,8 +108,6 @@ export default function Orders() {
               value={filterDate}
               onChange={(e) => {
                 setFilterDate(e.target.value);
-                setFilterMonth("");
-                setFilterYear("");
                 setCurrentPage(1);
               }}
               className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -168,13 +127,11 @@ export default function Orders() {
               className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
-          {(filterDate || filterMonth || filterYear || filterTime) && (
+          {(filterDate || filterTime) && (
             <div className="flex items-end">
               <button
                 onClick={() => {
                   setFilterDate("");
-                  setFilterMonth("");
-                  setFilterYear("");
                   setFilterTime("");
                   setCurrentPage(1);
                 }}

@@ -199,6 +199,7 @@ export default function Users() {
                   </label>
                   <input
                     type="text"
+                    required
                     value={formData.name}
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
@@ -212,6 +213,7 @@ export default function Users() {
                   </label>
                   <input
                     type="email"
+                    required
                     value={formData.email}
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
@@ -224,6 +226,7 @@ export default function Users() {
                     Role
                   </label>
                   <select
+                    required
                     value={formData.role}
                     onChange={(e) =>
                       setFormData({ ...formData, role: e.target.value })
@@ -246,6 +249,8 @@ export default function Users() {
                   </label>
                   <input
                     type="password"
+                    required={!editId}
+                    minLength="6"
                     value={formData.password}
                     onChange={(e) =>
                       setFormData({ ...formData, password: e.target.value })

@@ -26,8 +26,8 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        if (! $request->user()->isAdmin()) {
-            return $this->errorResponse('Unauthorized. Only Admins can create users', 403);
+        if (! $request->user()->hasRole(['admin', 'manager'])) {
+            return $this->errorResponse('Unauthorized. Only Admins or Managers can create users', 403);
         }
 
         $data = $request->validate([
@@ -46,7 +46,7 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        if (! $request->user()->isAdmin()) {
+        if (! $request->user()->hasRole(['admin', 'manager'])) {
             return $this->errorResponse('Unauthorized', 403);
         }
 
@@ -70,7 +70,7 @@ class UserController extends Controller
 
     public function destroy(User $user, Request $request)
     {
-        if (! $request->user()->isAdmin()) {
+        if (! $request->user()->hasRole(['admin', 'manager'])) {
             return $this->errorResponse('Unauthorized', 403);
         }
 
