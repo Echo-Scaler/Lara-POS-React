@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import api from "../services/api";
 import {
   EyeIcon,
@@ -10,13 +11,17 @@ import { useAuth } from "../contexts/AuthContext";
 import Pagination from "../components/Pagination";
 
 export default function Orders() {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialDate = queryParams.get("date") || "";
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [paginationData, setPaginationData] = useState({});
-  const [filterDate, setFilterDate] = useState("");
+  const [filterDate, setFilterDate] = useState(initialDate);
   const [filterTime, setFilterTime] = useState("");
   const [searchTrigger, setSearchTrigger] = useState(0);
 
@@ -41,6 +46,12 @@ export default function Orders() {
     const minutes = String(date.getMinutes()).padStart(2, "0");
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
+
+  useEffect(() => {
+    setFilterDate(initialDate);
+    setCurrentPage(1);
+    setSearchTrigger((prev) => prev + 1);
+  }, [initialDate]);
 
   useEffect(() => {
     fetchOrders(currentPage);

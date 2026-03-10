@@ -13,6 +13,7 @@ import Inventory from "./pages/Inventory";
 import Products from "./pages/admin/Products";
 import Categories from "./pages/admin/Categories";
 import Users from "./pages/admin/Users";
+import Customers from "./pages/Customers";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/pos" element={<POS />} />
               <Route path="/orders" element={<Orders />} />
+              <Route path="/customers" element={<Customers />} />
 
               <Route
                 element={<ProtectedRoute allowedRoles={["admin", "manager"]} />}

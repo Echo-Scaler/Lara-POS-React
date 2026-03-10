@@ -32,6 +32,10 @@ class ProductController extends Controller
             $query->where('is_active', $request->boolean('active'));
         }
 
+        if ($request->boolean('low_stock')) {
+            $query->whereColumn('stock', '<=', 'low_stock_threshold');
+        }
+
         // Pagination setup
         $perPage = $request->get('per_page', 15);
         $products = $query->latest()->paginate($perPage);
@@ -53,13 +57,13 @@ class ProductController extends Controller
         $product = Product::create($data);
         $product->load('category');
 
-        return $this->successResponse(new ProductResource($product), 'Product created successfully', 201);
+        return $this->successResponse((new ProductResource($product))->resolve(), 'Product created successfully', 201);
     }
 
     public function show(Product $product)
     {
         $product->load('category');
-        return $this->successResponse(new ProductResource($product));
+        return $this->successResponse((new ProductResource($product))->resolve());
     }
 
     public function update(UpdateProductRequest $request, Product $product)
@@ -77,7 +81,7 @@ class ProductController extends Controller
         $product->update($data);
         $product->load('category');
 
-        return $this->successResponse(new ProductResource($product), 'Product updated successfully');
+        return $this->successResponse((new ProductResource($product))->resolve(), 'Product updated successfully');
     }
 
     public function destroy(Product $product)

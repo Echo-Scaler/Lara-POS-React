@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Http\Resources\CustomerResource;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 
@@ -14,7 +15,9 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         $customers = Customer::latest('id')->paginate($request->get('per_page', 15));
-        return $this->successResponse($customers);
+        return CustomerResource::collection($customers)->additional([
+            'success' => true
+        ]);
     }
 
     public function store(Request $request)
@@ -28,13 +31,13 @@ class CustomerController extends Controller
 
         $customer = Customer::create($data);
 
-        return $this->successResponse($customer, 'Customer created successfully', 201);
+        return $this->successResponse((new CustomerResource($customer))->resolve(), 'Customer created successfully', 201);
     }
 
     public function show(Customer $customer)
     {
         $customer->load('orders');
-        return $this->successResponse($customer);
+        return $this->successResponse((new CustomerResource($customer))->resolve());
     }
 
     public function update(Request $request, Customer $customer)
@@ -48,7 +51,7 @@ class CustomerController extends Controller
 
         $customer->update($data);
 
-        return $this->successResponse($customer, 'Customer updated successfully');
+        return $this->successResponse((new CustomerResource($customer))->resolve(), 'Customer updated successfully');
     }
 
     public function destroy(Customer $customer)

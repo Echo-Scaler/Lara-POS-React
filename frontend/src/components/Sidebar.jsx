@@ -40,6 +40,12 @@ const Sidebar = () => {
       roles: ["admin", "manager", "cashier"],
     },
     {
+      name: "Customers",
+      path: "/customers",
+      icon: UsersIcon,
+      roles: ["admin", "manager", "cashier"],
+    },
+    {
       name: "Payments",
       path: "/payments",
       icon: CreditCardIcon,

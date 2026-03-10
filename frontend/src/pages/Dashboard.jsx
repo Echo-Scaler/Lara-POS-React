@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import {
   CurrencyDollarIcon,
@@ -18,6 +19,7 @@ import {
 } from "recharts";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -78,7 +80,10 @@ const Dashboard = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-md hover:-translate-y-1">
+        <Link
+          to={`/orders?date=${new Date().toISOString().split("T")[0]}`}
+          className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-md hover:-translate-y-1 block"
+        >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0 bg-indigo-50 p-3 rounded-lg">
@@ -96,9 +101,12 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-md hover:-translate-y-1">
+        <Link
+          to={`/orders?date=${new Date().toISOString().split("T")[0]}`}
+          className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-md hover:-translate-y-1 block"
+        >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0 bg-green-50 p-3 rounded-lg">
@@ -116,9 +124,12 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-md hover:-translate-y-1">
+        <Link
+          to="/customers"
+          className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-md hover:-translate-y-1 block"
+        >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0 bg-blue-50 p-3 rounded-lg">
@@ -136,9 +147,12 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-md hover:-translate-y-1">
+        <Link
+          to="/admin/users"
+          className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-md hover:-translate-y-1 block"
+        >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0 bg-purple-50 p-3 rounded-lg">
@@ -156,9 +170,12 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-md hover:-translate-y-1">
+        <Link
+          to="/admin/products?filter=low_stock"
+          className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-md hover:-translate-y-1 block"
+        >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0 bg-red-50 p-3 rounded-lg">
@@ -176,7 +193,7 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        </div>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -264,9 +281,12 @@ const Dashboard = () => {
               ))}
               {stats?.low_stock_products?.length > 5 && (
                 <li className="py-4 text-center">
-                  <span className="text-sm text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer transition-colors">
+                  <Link
+                    to="/admin/products?filter=low_stock"
+                    className="text-sm text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer transition-colors"
+                  >
                     View all {stats.low_stock_products.length} alerts →
-                  </span>
+                  </Link>
                 </li>
               )}
               {(!stats?.low_stock_products ||

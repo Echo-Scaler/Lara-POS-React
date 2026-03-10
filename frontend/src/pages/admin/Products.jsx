@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import api from "../../services/api";
 import {
   PlusIcon,
@@ -9,6 +10,10 @@ import {
 import Pagination from "../../components/Pagination";
 
 export default function Products() {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialFilter = queryParams.get("filter");
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,13 +41,16 @@ export default function Products() {
 
   useEffect(() => {
     fetchProducts(currentPage);
-    fetchCategories();
-  }, [currentPage]);
+  }, [currentPage, initialFilter]);
 
   const fetchProducts = async (page = 1) => {
     setLoading(true);
     try {
-      const res = await api.get(`/products?page=${page}`);
+      let url = `/products?page=${page}`;
+      if (initialFilter === "low_stock") {
+        url += "&low_stock=1";
+      }
+      const res = await api.get(url);
       setProducts(res.data.data); // data structure from API resource
       if (res.data.meta) {
         setCurrentPage(res.data.meta.current_page);
@@ -64,6 +72,10 @@ export default function Products() {
       console.error(e);
     }
   };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const openModal = (product = null) => {
     if (product) {
