@@ -3,8 +3,22 @@ import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => {
+    try {
+      return localStorage.getItem("remember_email") || "";
+    } catch {
+      return "";
+    }
+  });
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => {
+    try {
+      return Boolean(localStorage.getItem("remember_email"));
+    } catch {
+      return false;
+    }
+  });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -28,6 +42,12 @@ const Login = () => {
     const res = await login(email, password);
 
     if (res.success) {
+      try {
+        if (rememberMe) localStorage.setItem("remember_email", email);
+        else localStorage.removeItem("remember_email");
+      } catch {
+        // ignore
+      }
       navigate("/dashboard", { replace: true });
     } else {
       setError(res.message);
@@ -36,16 +56,20 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8 bg-white p-10 rounded-xl shadow-lg border border-gray-100">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
-            SmartPOS
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Sign in to your account
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md">
+        <div className="bg-white/80 backdrop-blur rounded-2xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.25)] border border-white p-10">
+          <div className="flex flex-col items-center">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-sm">
+              SP
+            </div>
+            <h2 className="mt-5 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
+              SmartPOS
+            </h2>
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Sign in to your account
+            </p>
+          </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-50 text-red-700 p-3 rounded text-sm text-center border border-red-100">
@@ -79,18 +103,46 @@ const Login = () => {
               >
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="relative block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                placeholder="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  className="relative block w-full appearance-none rounded-md border border-gray-300 pl-3 pr-14 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  placeholder="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute inset-y-0 right-0 px-3 text-xs font-bold text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              Remember email
+            </label>
+            <button
+              type="button"
+              className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+              onClick={() => alert("Please contact admin to reset password.")}
+            >
+              Forgot password?
+            </button>
           </div>
 
           <div>
@@ -105,6 +157,7 @@ const Login = () => {
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

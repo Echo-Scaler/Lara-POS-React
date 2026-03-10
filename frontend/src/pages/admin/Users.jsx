@@ -16,6 +16,8 @@ export default function Users() {
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [paginationData, setPaginationData] = useState({});
+  const [query, setQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -105,70 +107,193 @@ export default function Users() {
 
   if (loading) return <div>Loading...</div>;
 
+  const filteredUsers = users.filter((u) => {
+    const q = query.trim().toLowerCase();
+    const matchesQuery =
+      !q ||
+      u.name?.toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q);
+    const matchesRole = !roleFilter || u.role === roleFilter;
+    return matchesQuery && matchesRole;
+  });
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">
-          User Management
-        </h1>
-        <button
-          onClick={() => openModal()}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-        >
-          <PlusIcon className="-ml-1 mr-2 h-5 w-5" /> Add User
-        </button>
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-white to-indigo-50 p-5 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
+              <UsersIcon className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-extrabold text-gray-900 leading-tight">
+                Admin Users
+              </h1>
+              <p className="text-sm text-gray-600 font-medium">
+                Manage admin, manager, and cashier accounts.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => openModal()}
+            className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm"
+          >
+            <PlusIcon className="h-5 w-5" /> Add User
+          </button>
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">
+              Search
+            </label>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by name or email..."
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">
+              Role
+            </label>
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+            >
+              <option value="">All Roles</option>
+              <option value="admin">Admin</option>
+              <option value="manager">Manager</option>
+              <option value="cashier">Cashier</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <div className="bg-white shadow-sm overflow-hidden sm:rounded-xl border border-gray-200 flex flex-col">
+      <div className="bg-white shadow-sm overflow-hidden rounded-2xl border border-gray-200 flex flex-col">
+        <div className="hidden md:block">
+          <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 border-b border-slate-200 text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+            <div className="col-span-4">Name</div>
+            <div className="col-span-5">Email</div>
+            <div className="col-span-2">Role</div>
+            <div className="col-span-1 text-right">Action</div>
+          </div>
+        </div>
+
         <ul className="divide-y divide-gray-100 flex-1">
-          {users.map((user) => (
-            <li
-              key={user.id}
-              className="px-4 py-4 flex items-center justify-between sm:px-6"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-indigo-600 truncate">
-                  {user.name}
-                </p>
-                <div className="mt-1 flex items-center text-sm text-gray-500">
+          {filteredUsers.map((user) => (
+            <li key={user.id} className="px-4 py-4 sm:px-6">
+              <div className="md:hidden flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-full bg-gray-900 text-white flex items-center justify-center font-black text-sm">
+                      {(user.name || "U").slice(0, 1).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-extrabold text-gray-900 truncate">
+                        {user.name}
+                      </div>
+                      <div className="text-xs text-gray-500 font-semibold truncate">
+                        {user.email}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <span
+                      className={`px-2.5 py-1 inline-flex text-[11px] font-extrabold rounded-full capitalize ${
+                        user.role === "admin"
+                          ? "bg-red-100 text-red-800 border border-red-200"
+                          : user.role === "manager"
+                            ? "bg-blue-100 text-blue-800 border border-blue-200"
+                            : "bg-slate-100 text-slate-800 border border-slate-200"
+                      }`}
+                    >
+                      {user.role}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openModal(user)}
+                    className="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 bg-white text-indigo-600 hover:bg-indigo-50"
+                    title="Edit"
+                  >
+                    <PencilIcon className="h-5 w-5" />
+                  </button>
+                  {user.id !== currentUser.id && (
+                    <button
+                      onClick={() => handleDelete(user.id)}
+                      className="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 bg-white text-red-600 hover:bg-red-50"
+                      title="Delete"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="hidden md:grid grid-cols-12 gap-4 items-center">
+                <div className="col-span-4 min-w-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-black">
+                      {(user.name || "U").slice(0, 1).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-extrabold text-gray-900 truncate">
+                        {user.name}
+                      </div>
+                      <div className="text-xs font-semibold text-gray-500 truncate">
+                        ID: {user.id}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-span-5 min-w-0">
+                  <div className="text-sm font-semibold text-gray-900 truncate">
+                    {user.email}
+                  </div>
+                </div>
+                <div className="col-span-2">
                   <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize 
-                    ${
+                    className={`px-2.5 py-1 inline-flex text-[11px] font-extrabold rounded-full capitalize ${
                       user.role === "admin"
-                        ? "bg-red-100 text-red-800"
+                        ? "bg-red-100 text-red-800 border border-red-200"
                         : user.role === "manager"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-gray-100 text-gray-800"
+                          ? "bg-blue-100 text-blue-800 border border-blue-200"
+                          : "bg-slate-100 text-slate-800 border border-slate-200"
                     }`}
                   >
                     {user.role}
                   </span>
-                  <span className="ml-3 truncate">{user.email}</span>
                 </div>
-              </div>
-              <div className="ml-5 flex-shrink-0 flex items-center space-x-2 border-transparent border-gray-100">
-                <button
-                  onClick={() => openModal(user)}
-                  className="text-indigo-600 hover:text-indigo-900 p-2"
-                >
-                  <PencilIcon className="h-5 w-5" />
-                </button>
-                {user.id !== currentUser.id && (
+                <div className="col-span-1 flex justify-end gap-2">
                   <button
-                    onClick={() => handleDelete(user.id)}
-                    className="text-red-600 hover:text-red-900 p-2"
+                    onClick={() => openModal(user)}
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 bg-white text-indigo-600 hover:bg-indigo-50"
+                    title="Edit"
                   >
-                    <TrashIcon className="h-5 w-5" />
+                    <PencilIcon className="h-5 w-5" />
                   </button>
-                )}
+                  {user.id !== currentUser.id && (
+                    <button
+                      onClick={() => handleDelete(user.id)}
+                      className="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 bg-white text-red-600 hover:bg-red-50"
+                      title="Delete"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
               </div>
             </li>
           ))}
         </ul>
-        {users.length === 0 && !loading && (
+        {filteredUsers.length === 0 && !loading && (
           <div className="px-6 py-12 text-center text-gray-500 bg-gray-50 flex flex-col items-center">
             <UsersIcon className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-            <p>No users found.</p>
+            <p className="font-semibold">No users found.</p>
           </div>
         )}
         <Pagination
@@ -185,92 +310,110 @@ export default function Users() {
         <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75"
+              className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm"
               onClick={() => setShowModal(false)}
             ></div>
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen">
               &#8203;
             </span>
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 opacity-100">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  />
+            <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-[0_20px_60px_-20px_rgba(0,0,0,0.45)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full opacity-100 border border-white/30">
+              <div className="px-6 py-5 bg-gradient-to-br from-indigo-700 via-slate-800 to-gray-900">
+                <div className="text-white">
+                  <div className="text-lg font-extrabold">
+                    {editId ? "Edit User" : "Add User"}
+                  </div>
+                  <div className="text-sm font-semibold text-white/80 mt-0.5">
+                    {editId
+                      ? "Update user details and permissions."
+                      : "Create a new user account."}
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  />
+              </div>
+              <form
+                onSubmit={handleSubmit}
+                className="px-6 py-6 space-y-4 bg-gradient-to-b from-slate-50 to-white"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-1">
+                    <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                    />
+                  </div>
+                  <div className="sm:col-span-1">
+                    <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                    />
+                  </div>
+                  <div className="sm:col-span-1">
+                    <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">
+                      Role
+                    </label>
+                    <select
+                      required
+                      value={formData.role}
+                      onChange={(e) =>
+                        setFormData({ ...formData, role: e.target.value })
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                    >
+                      <option value="cashier">Cashier</option>
+                      <option value="manager">Manager</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <div className="sm:col-span-1">
+                    <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">
+                      Password{" "}
+                      {editId && (
+                        <span className="text-slate-400 font-bold normal-case tracking-normal">
+                          (Leave blank to keep current)
+                        </span>
+                      )}
+                    </label>
+                    <input
+                      type="password"
+                      required={!editId}
+                      minLength="6"
+                      value={formData.password}
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Role
-                  </label>
-                  <select
-                    required
-                    value={formData.role}
-                    onChange={(e) =>
-                      setFormData({ ...formData, role: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white"
-                  >
-                    <option value="cashier">Cashier</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Password{" "}
-                    {editId && (
-                      <span className="text-gray-400 font-normal">
-                        (Leave blank to keep current)
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    type="password"
-                    required={!editId}
-                    minLength="6"
-                    value={formData.password}
-                    onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  />
-                </div>
-                <div className="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
-                  <button
-                    type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    {editId ? "Save" : "Add"}
-                  </button>
+
+                <div className="pt-2 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 sm:mt-0 sm:w-auto sm:text-sm"
+                    className="inline-flex justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-extrabold text-slate-700 hover:bg-slate-50"
                   >
                     Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="inline-flex justify-center rounded-xl border border-transparent bg-indigo-600 px-4 py-2.5 text-sm font-extrabold text-white hover:bg-indigo-700 shadow-sm"
+                  >
+                    {editId ? "Save" : "Add"}
                   </button>
                 </div>
               </form>

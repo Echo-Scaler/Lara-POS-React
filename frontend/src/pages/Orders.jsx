@@ -93,6 +93,23 @@ export default function Orders() {
     }
   };
 
+  const downloadBlob = (blob, filename) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const escapeHtml = (value) =>
+    String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;");
+
   const handleDownloadCsv = async (orderId, orderNo) => {
     try {
       const response = await api.get(`/orders/${orderId}/csv`, {
@@ -100,19 +117,103 @@ export default function Orders() {
       });
 
       // Create a URL for the blob
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `order-${orderNo}.csv`);
-      document.body.appendChild(link);
-      link.click();
-
-      // Cleanup
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      const contentType =
+        response.headers["content-type"] || "text/csv;charset=utf-8";
+      downloadBlob(
+        new Blob([response.data], { type: contentType }),
+        `order-${orderNo}.csv`,
+      );
     } catch (error) {
       console.error("Error downloading CSV:", error);
       alert("Failed to download CSV.");
+    }
+  };
+
+  const buildReceiptHtml = (order) => {
+    const itemsHtml = (order.items || [])
+      .map((item) => {
+        const qty = item.quantity ?? 0;
+        const name = item.product_name ?? "";
+        const price = item.price ?? 0;
+        const subtotal = item.subtotal ?? qty * price;
+        return `
+            <tr>
+              <td style="padding: 6px 0;">
+                <div style="font-weight: 600; color: #111827;">${escapeHtml(name)}</div>
+                <div style="font-size: 12px; color: #6b7280;">@ $${Number(price).toFixed(2)}</div>
+              </td>
+              <td style="padding: 6px 0; text-align: right; font-weight: 600; color: #111827;">${qty}</td>
+              <td style="padding: 6px 0; text-align: right; font-weight: 700; color: #111827;">$${Number(subtotal).toFixed(2)}</td>
+            </tr>
+          `;
+      })
+      .join("");
+
+    const total = Number(order.total ?? 0).toFixed(2);
+    const orderNo = String(order.order_no ?? "");
+    const createdAt = order.created_at
+      ? new Date(order.created_at).toLocaleString()
+      : "";
+
+    return `
+        <!doctype html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>Receipt ${escapeHtml(orderNo)}</title>
+          </head>
+          <body style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 0; padding: 16px; background: #ffffff;">
+            <div style="width: 300px; margin: 0 auto;">
+              <div style="text-align: center; margin-bottom: 12px;">
+                <div style="width: 48px; height: 48px; background: #111827; border-radius: 999px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center;">
+                  <span style="color: #ffffff; font-weight: 800;">POS</span>
+                </div>
+                <div style="font-size: 18px; font-weight: 800; color: #111827;">Supermarket POS</div>
+                <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Order No: ${escapeHtml(orderNo)}</div>
+                <div style="font-size: 12px; color: #6b7280;">${escapeHtml(createdAt)}</div>
+              </div>
+
+              <div style="border-top: 1px dashed #d1d5db; border-bottom: 1px dashed #d1d5db; padding: 10px 0; margin-bottom: 10px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                  <thead>
+                    <tr>
+                      <th style="text-align: left; padding-bottom: 6px; color: #4b5563; font-weight: 700;">Item</th>
+                      <th style="text-align: right; padding-bottom: 6px; color: #4b5563; font-weight: 700;">Qty</th>
+                      <th style="text-align: right; padding-bottom: 6px; color: #4b5563; font-weight: 700;">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${itemsHtml}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; color: #111827;">
+                <div>Total</div>
+                <div>$${total}</div>
+              </div>
+
+              <div style="text-align: center; margin-top: 14px; font-size: 12px; color: #6b7280; font-weight: 600;">
+                Thank you for your purchase!
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+  };
+
+  const handleDownloadReceipt = async (orderId, orderNo) => {
+    try {
+      const res = await api.get(`/orders/${orderId}`);
+      const receiptHtml = buildReceiptHtml(res.data.data);
+      downloadBlob(
+        new Blob([receiptHtml], { type: "text/html;charset=utf-8" }),
+        `order-${orderNo}-receipt.html`,
+      );
+    } catch (e) {
+      console.error(e);
+      alert("Failed to download receipt.");
     }
   };
 
@@ -120,18 +221,20 @@ export default function Orders() {
     try {
       const response = await api.get(`/orders/${orderId}/pdf`, {
         responseType: "blob",
+        headers: { Accept: "application/pdf" },
       });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `order-${orderNo}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      const contentType = response.headers["content-type"] || "";
+      if (!contentType.includes("pdf")) {
+        throw new Error("Server did not return a PDF file");
+      }
+      const normalizedType = contentType.split(";")[0] || "application/pdf";
+      downloadBlob(
+        new Blob([response.data], { type: normalizedType }),
+        `order-${orderNo}.pdf`,
+      );
     } catch (error) {
       console.error("Error downloading PDF:", error);
-      alert("Failed to download PDF.");
+      handleDownloadReceipt(orderId, orderNo);
     }
   };
 
@@ -164,6 +267,7 @@ export default function Orders() {
               className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
+          
           <div className="flex items-end gap-2">
             <button
               onClick={() => {
@@ -226,14 +330,32 @@ export default function Orders() {
                     className="text-gray-400 hover:text-green-600 transition-colors p-2"
                     title="Export CSV"
                   >
-                    <ArrowDownTrayIcon className="h-5 w-5" />
+                    <span className="inline-flex items-center gap-1">
+                      <ArrowDownTrayIcon className="h-5 w-5" />
+                      <span className="text-xs font-bold">CSV</span>
+                    </span>
                   </button>
                   <button
                     onClick={() => handleDownloadPdf(order.id, order.order_no)}
                     className="text-gray-400 hover:text-red-600 transition-colors p-2"
                     title="Export PDF"
                   >
-                    <ArrowDownTrayIcon className="h-5 w-5" />
+                    <span className="inline-flex items-center gap-1">
+                      <ArrowDownTrayIcon className="h-5 w-5" />
+                      <span className="text-xs font-bold">PDF</span>
+                    </span>
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleDownloadReceipt(order.id, order.order_no)
+                    }
+                    className="text-gray-400 hover:text-gray-900 transition-colors p-2"
+                    title="Download Receipt"
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      <ArrowDownTrayIcon className="h-5 w-5" />
+                      <span className="text-xs font-bold">RECEIPT</span>
+                    </span>
                   </button>
                 </div>
               </div>
