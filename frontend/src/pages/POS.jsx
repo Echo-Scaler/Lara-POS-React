@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import {
   ShoppingCartIcon,
@@ -13,6 +14,7 @@ import {
 import { StarIcon as StarSolidIcon } from "@heroicons/react/24/solid";
 
 export default function POS() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState("");
@@ -195,7 +197,31 @@ export default function POS() {
   const removeFromCart = (id) =>
     setCart((prev) => prev.filter((i) => i.product_id !== id));
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+  const taxRate = 0.08;
+  const cartSubtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+  const cartTax = Math.round(cartSubtotal * taxRate * 100) / 100;
+  const cartTotal = cartSubtotal + cartTax;
+  const receiptSubtotal = useMemo(() => {
+    if (!completedOrder) return 0;
+    const orderSubtotal = Number(completedOrder.subtotal);
+    if (!Number.isNaN(orderSubtotal) && orderSubtotal > 0) return orderSubtotal;
+    return (completedOrder.cartSnapshot || []).reduce(
+      (sum, item) => sum + Number(item.subtotal || 0),
+      0,
+    );
+  }, [completedOrder]);
+  const receiptTax = useMemo(() => {
+    if (!completedOrder) return 0;
+    const orderTax = Number(completedOrder.tax);
+    if (!Number.isNaN(orderTax) && orderTax >= 0) return orderTax;
+    return Math.round(receiptSubtotal * taxRate * 100) / 100;
+  }, [completedOrder, receiptSubtotal, taxRate]);
+  const receiptTotal = useMemo(() => {
+    if (!completedOrder) return 0;
+    const orderTotal = Number(completedOrder.total);
+    if (!Number.isNaN(orderTotal) && orderTotal > 0) return orderTotal;
+    return receiptSubtotal + receiptTax;
+  }, [completedOrder, receiptSubtotal, receiptTax]);
 
   // Hold / Resume Order Handlers
   const holdOrder = () => {
@@ -254,6 +280,7 @@ export default function POS() {
       setOrderCounts(nextCounts);
       localStorage.setItem("order_counts", JSON.stringify(nextCounts));
       // Show Receipt Modal
+      navigate("/pos", { replace: true });
       setCompletedOrder({
         ...res.data.data,
         cartSnapshot: cart,
@@ -511,11 +538,23 @@ export default function POS() {
           </div>
 
           <div className="p-4 border-t bg-white border-gray-200 shadow-sm z-10">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-gray-500 font-medium">Total Balance</span>
-              <span className="text-2xl font-black text-gray-900">
-                ${cartTotal.toFixed(2)}
-              </span>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-3 mb-4">
+              <div className="flex justify-between text-sm font-semibold text-slate-600">
+                <span>Subtotal</span>
+                <span>${cartSubtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm font-semibold text-slate-600 mt-1">
+                <span>Tax (8%)</span>
+                <span>${cartTax.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-end mt-3 pt-3 border-t border-slate-200">
+                <span className="text-slate-500 font-extrabold uppercase tracking-wider text-xs">
+                  Total
+                </span>
+                <span className="text-2xl font-black text-gray-900">
+                  ${cartTotal.toFixed(2)}
+                </span>
+              </div>
             </div>
             <button
               onClick={() => setShowCheckout(true)}
@@ -570,13 +609,23 @@ export default function POS() {
               <form onSubmit={handleCheckout}>
                 <div className="px-6 py-6 pb-2 bg-gradient-to-b from-slate-50 to-white">
                   {/* Total Amount Badge */}
-                  <div className="rounded-2xl p-5 border border-slate-200/70 mb-6 flex items-center justify-between shadow-sm bg-white">
-                    <span className="text-slate-500 font-extrabold uppercase tracking-wider text-xs">
-                      Total Due
-                    </span>
-                    <span className="text-4xl font-black text-gray-900 tracking-tighter">
-                      ${cartTotal.toFixed(2)}
-                    </span>
+                  <div className="rounded-2xl p-5 border border-slate-200/70 mb-6 shadow-sm bg-white">
+                    <div className="flex justify-between text-sm font-semibold text-slate-600">
+                      <span>Subtotal</span>
+                      <span>${cartSubtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-semibold text-slate-600 mt-1">
+                      <span>Tax (8%)</span>
+                      <span>${cartTax.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-end mt-4 pt-4 border-t border-slate-200">
+                      <span className="text-slate-500 font-extrabold uppercase tracking-wider text-xs">
+                        Total Due
+                      </span>
+                      <span className="text-4xl font-black text-gray-900 tracking-tighter">
+                        ${cartTotal.toFixed(2)}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="space-y-6">
@@ -798,28 +847,31 @@ export default function POS() {
                 </div>
 
                 <div className="border-t border-dashed border-gray-300 pt-3 space-y-2">
-                  <div className="flex justify-between text-base font-bold text-gray-900">
+                  <div className="flex justify-between text-sm font-medium text-gray-600">
+                    <span>Subtotal</span>
+                    <span>${receiptSubtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-medium text-gray-600">
+                    <span>Tax (8%)</span>
+                    <span>${receiptTax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-dashed border-gray-200">
                     <span>Total Due</span>
-                    <span>
-                      $
-                      {parseFloat(
-                        completedOrder.total ||
-                          completedOrder.cartSnapshot.reduce(
-                            (s, i) => s + i.subtotal,
-                            0,
-                          ),
-                      ).toFixed(2)}
-                    </span>
+                    <span>${receiptTotal.toFixed(2)}</span>
                   </div>
                   {completedOrder.payment_method === "cash" && (
                     <>
                       <div className="flex justify-between text-sm font-medium text-gray-600">
                         <span>Cash Tendered</span>
-                        <span>${completedOrder.amount_paid.toFixed(2)}</span>
+                        <span>
+                          ${Number(completedOrder.amount_paid || 0).toFixed(2)}
+                        </span>
                       </div>
                       <div className="flex justify-between text-sm font-bold text-gray-900">
                         <span>Change</span>
-                        <span>${completedOrder.change.toFixed(2)}</span>
+                        <span>
+                          ${Number(completedOrder.change || 0).toFixed(2)}
+                        </span>
                       </div>
                     </>
                   )}
