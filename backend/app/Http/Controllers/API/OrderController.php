@@ -193,4 +193,66 @@ class OrderController extends Controller
             return $this->errorResponse('Failed to cancel order: ' . $e->getMessage(), 500);
         }
     }
+
+    public function exportCsv(Order $order)
+    {
+        $order->load(['items', 'payments', 'customer', 'user']);
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="order-' . $order->order_no . '.csv"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($order) {
+            $file = fopen('php://output', 'w');
+
+            // Order Details Section
+            fputcsv($file, ['Order Summary']);
+            fputcsv($file, ['Order No', $order->order_no]);
+            fputcsv($file, ['Date', $order->created_at->format('Y-m-d H:i:s')]);
+            fputcsv($file, ['Cashier', $order->user->name ?? 'N/A']);
+            fputcsv($file, ['Customer', $order->customer->name ?? 'Walk-in']);
+            fputcsv($file, ['Status', ucfirst($order->status)]);
+            fputcsv($file, ['Subtotal', '$' . number_format($order->subtotal, 2)]);
+            fputcsv($file, ['Discount', '$' . number_format($order->discount_amount, 2)]);
+            fputcsv($file, ['Total', '$' . number_format($order->total, 2)]);
+            fputcsv($file, []);
+
+            // Payments Section
+            fputcsv($file, ['Payments']);
+            fputcsv($file, ['Method', 'Amount', 'Change', 'Reference', 'Paid At']);
+            foreach ($order->payments as $payment) {
+                fputcsv($file, [
+                    ucfirst($payment->method),
+                    '$' . number_format($payment->amount, 2),
+                    '$' . number_format($payment->change, 2),
+                    $payment->reference ?? 'N/A',
+                    $payment->paid_at ? $payment->paid_at->format('Y-m-d H:i:s') : 'N/A'
+                ]);
+            }
+            fputcsv($file, []);
+
+            // Items Section
+            fputcsv($file, ['Order Items']);
+            fputcsv($file, ['Item', 'SKU', 'Quantity', 'Price', 'Discount', 'Subtotal']);
+
+            foreach ($order->items as $item) {
+                fputcsv($file, [
+                    $item->product_name,
+                    $item->product_sku,
+                    $item->quantity,
+                    '$' . number_format($item->price, 2),
+                    $item->discount . '%',
+                    '$' . number_format($item->subtotal, 2)
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }

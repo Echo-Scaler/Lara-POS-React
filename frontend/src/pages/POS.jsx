@@ -39,7 +39,7 @@ export default function POS() {
 
   const fetchCategories = async () => {
     try {
-      const res = await api.get("/categories?active=1");
+      const res = await api.get("/categories?active=1&per_page=100");
       setCategories(res.data.data);
     } catch (e) {
       console.error(e);

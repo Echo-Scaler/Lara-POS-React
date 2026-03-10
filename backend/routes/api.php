@@ -31,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
+    Route::get('/orders/{order}/csv', [OrderController::class, 'exportCsv']);
 
     // Payments
     Route::get('/payments', [PaymentController::class, 'index']);

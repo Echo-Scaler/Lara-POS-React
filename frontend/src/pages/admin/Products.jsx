@@ -1,12 +1,21 @@
 import { useState, useEffect } from "react";
 import api from "../../services/api";
-import { PlusIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
+import {
+  PlusIcon,
+  TrashIcon,
+  PencilIcon,
+  CubeIcon,
+} from "@heroicons/react/24/outline";
+import Pagination from "../../components/Pagination";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [paginationData, setPaginationData] = useState({});
 
   const [formData, setFormData] = useState({
     name: "",
@@ -26,14 +35,20 @@ export default function Products() {
   const [imageFile, setImageFile] = useState(null);
 
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(currentPage);
     fetchCategories();
-  }, []);
+  }, [currentPage]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (page = 1) => {
+    setLoading(true);
     try {
-      const res = await api.get("/products");
+      const res = await api.get(`/products?page=${page}`);
       setProducts(res.data.data); // data structure from API resource
+      if (res.data.meta) {
+        setCurrentPage(res.data.meta.current_page);
+        setLastPage(res.data.meta.last_page);
+        setPaginationData(res.data.meta);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -43,7 +58,7 @@ export default function Products() {
 
   const fetchCategories = async () => {
     try {
-      const res = await api.get("/categories");
+      const res = await api.get("/categories?per_page=100");
       setCategories(res.data.data);
     } catch (e) {
       console.error(e);
@@ -104,7 +119,7 @@ export default function Products() {
         });
       }
       setShowModal(false);
-      fetchProducts();
+      fetchProducts(currentPage);
     } catch (e) {
       alert(
         "Error saving product: " + (e.response?.data?.message || e.message),
@@ -116,7 +131,7 @@ export default function Products() {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
       await api.delete(`/products/${id}`);
-      fetchProducts();
+      fetchProducts(currentPage);
     } catch (e) {
       alert(
         "Cannot delete product: " + (e.response?.data?.message || e.message),
@@ -140,8 +155,8 @@ export default function Products() {
         </button>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md border border-gray-200">
-        <ul className="divide-y divide-gray-200">
+      <div className="bg-white shadow-sm overflow-hidden sm:rounded-xl border border-gray-200 flex flex-col">
+        <ul className="divide-y divide-gray-100 flex-1">
           {products.map((product) => (
             <li key={product.id}>
               <div className="px-4 py-4 flex items-center sm:px-6">
@@ -215,6 +230,20 @@ export default function Products() {
             </li>
           ))}
         </ul>
+        {products.length === 0 && !loading && (
+          <div className="px-6 py-12 text-center text-gray-500 bg-gray-50 flex flex-col items-center">
+            <CubeIcon className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+            <p>No products found.</p>
+          </div>
+        )}
+        <Pagination
+          currentPage={currentPage}
+          lastPage={lastPage}
+          onPageChange={setCurrentPage}
+          totalItems={paginationData.total}
+          fromItem={paginationData.from}
+          toItem={paginationData.to}
+        />
       </div>
 
       {showModal && (

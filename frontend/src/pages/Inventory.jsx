@@ -1,20 +1,30 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 import { CubeIcon } from "@heroicons/react/24/outline";
+import Pagination from "../components/Pagination";
 
 export default function Inventory() {
   const [movements, setMovements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [paginationData, setPaginationData] = useState({});
 
   useEffect(() => {
-    fetchMovements();
-  }, []);
+    fetchMovements(currentPage);
+  }, [currentPage]);
 
-  const fetchMovements = async () => {
+  const fetchMovements = async (page = 1) => {
+    setLoading(true);
     try {
-      // Laravel pagination wraps the array in an extra 'data' property
-      const responseData = res.data.data;
-      setMovements(responseData.data ? responseData.data : responseData);
+      const res = await api.get(`/inventory?page=${page}`);
+      const paginator = res.data.data;
+      setMovements(paginator.data ? paginator.data : paginator);
+      if (paginator.current_page) {
+        setCurrentPage(paginator.current_page);
+        setLastPage(paginator.last_page);
+        setPaginationData(paginator);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -48,8 +58,8 @@ export default function Inventory() {
         </h1>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md border border-gray-200">
-        <ul className="divide-y divide-gray-200">
+      <div className="bg-white shadow-sm overflow-hidden sm:rounded-xl border border-gray-200 flex flex-col">
+        <ul className="divide-y divide-gray-100 flex-1">
           {movements.map((movement) => (
             <li
               key={movement.id}
@@ -105,12 +115,21 @@ export default function Inventory() {
               </div>
             </li>
           ))}
-          {movements.length === 0 && (
-            <li className="px-4 py-8 text-center text-gray-500">
-              No inventory movements recorded.
-            </li>
-          )}
         </ul>
+        {movements.length === 0 && !loading && (
+          <div className="px-6 py-12 text-center text-gray-500 bg-gray-50 flex flex-col items-center">
+            <CubeIcon className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+            <p>No inventory movements recorded.</p>
+          </div>
+        )}
+        <Pagination
+          currentPage={currentPage}
+          lastPage={lastPage}
+          onPageChange={setCurrentPage}
+          totalItems={paginationData.total}
+          fromItem={paginationData.from}
+          toItem={paginationData.to}
+        />
       </div>
     </div>
   );

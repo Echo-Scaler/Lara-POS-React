@@ -16,15 +16,19 @@ class CategoryController extends Controller
 
     public function index(Request $request)
     {
-        $query = Category::query();
+        $query = Category::withCount('products');
 
         if ($request->has('active')) {
             $query->where('is_active', $request->boolean('active'));
         }
 
-        $categories = $query->withCount('products')->orderBy('name')->get();
+        $perPage = $request->get('per_page', 15);
+        $categories = $query->orderBy('name')->paginate($perPage);
 
-        return $this->successResponse(CategoryResource::collection($categories));
+        return CategoryResource::collection($categories)->additional([
+            'success' => true,
+            'message' => 'Categories retrieved successfully'
+        ]);
     }
 
     public function store(StoreCategoryRequest $request)

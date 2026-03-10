@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import api from "../../services/api";
-import { PlusIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
+import {
+  PlusIcon,
+  TrashIcon,
+  PencilIcon,
+  CubeIcon,
+} from "@heroicons/react/24/outline";
+import Pagination from "../../components/Pagination";
 
 export default function Categories() {
   const [categories, setCategories] = useState([]);
@@ -12,15 +18,24 @@ export default function Categories() {
     is_active: true,
   });
   const [editId, setEditId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [paginationData, setPaginationData] = useState({});
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    fetchCategories(currentPage);
+  }, [currentPage]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (page = 1) => {
+    setLoading(true);
     try {
-      const res = await api.get("/categories");
+      const res = await api.get(`/categories?page=${page}`);
       setCategories(res.data.data);
+      if (res.data.meta) {
+        setCurrentPage(res.data.meta.current_page);
+        setLastPage(res.data.meta.last_page);
+        setPaginationData(res.data.meta);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -52,7 +67,7 @@ export default function Categories() {
         await api.post("/categories", formData);
       }
       setShowModal(false);
-      fetchCategories();
+      fetchCategories(currentPage);
     } catch (e) {
       alert(
         "Error saving category: " + (e.response?.data?.message || e.message),
@@ -64,7 +79,7 @@ export default function Categories() {
     if (!confirm("Are you sure?")) return;
     try {
       await api.delete(`/categories/${id}`);
-      fetchCategories();
+      fetchCategories(currentPage);
     } catch (e) {
       alert("Cannot delete: " + (e.response?.data?.message || e.message));
     }
@@ -84,8 +99,8 @@ export default function Categories() {
         </button>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md border border-gray-200">
-        <ul className="divide-y divide-gray-200">
+      <div className="bg-white shadow-sm overflow-hidden sm:rounded-xl border border-gray-200 flex flex-col">
+        <ul className="divide-y divide-gray-100 flex-1">
           {categories.map((cat) => (
             <li
               key={cat.id}
@@ -126,6 +141,20 @@ export default function Categories() {
             </li>
           ))}
         </ul>
+        {categories.length === 0 && !loading && (
+          <div className="px-6 py-12 text-center text-gray-500 bg-gray-50 flex flex-col items-center">
+            <CubeIcon className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+            <p>No categories found.</p>
+          </div>
+        )}
+        <Pagination
+          currentPage={currentPage}
+          lastPage={lastPage}
+          onPageChange={setCurrentPage}
+          totalItems={paginationData.total}
+          fromItem={paginationData.from}
+          toItem={paginationData.to}
+        />
       </div>
 
       {showModal && (

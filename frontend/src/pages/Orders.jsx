@@ -1,20 +1,35 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
-import { EyeIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import {
+  EyeIcon,
+  XCircleIcon,
+  ClipboardDocumentListIcon,
+  ArrowDownTrayIcon,
+} from "@heroicons/react/24/outline";
+import Pagination from "../components/Pagination";
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [paginationData, setPaginationData] = useState({});
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    fetchOrders(currentPage);
+  }, [currentPage]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (page = 1) => {
+    setLoading(true);
     try {
-      const res = await api.get("/orders");
+      const res = await api.get(`/orders?page=${page}`);
       setOrders(res.data.data);
+      if (res.data.meta) {
+        setCurrentPage(res.data.meta.current_page);
+        setLastPage(res.data.meta.last_page);
+        setPaginationData(res.data.meta);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -32,7 +47,7 @@ export default function Orders() {
     try {
       await api.post(`/orders/${id}/cancel`);
       alert("Order cancelled successfully");
-      fetchOrders();
+      fetchOrders(currentPage);
       setSelectedOrder(null);
     } catch (e) {
       alert("Failed to cancel: " + (e.response?.data?.message || e.message));
@@ -48,14 +63,37 @@ export default function Orders() {
     }
   };
 
+  const handleDownloadCsv = async (orderId, orderNo) => {
+    try {
+      const response = await api.get(`/orders/${orderId}/csv`, {
+        responseType: "blob", // Important for file downloads
+      });
+
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `order-${orderNo}.csv`);
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading CSV:", error);
+      alert("Failed to download CSV.");
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold text-gray-900">Order History</h1>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md border border-gray-200">
-        <ul className="divide-y divide-gray-200">
+      <div className="bg-white shadow-sm overflow-hidden sm:rounded-xl border border-gray-200 flex flex-col">
+        <ul className="divide-y divide-gray-100 flex-1">
           {orders.map((order) => (
             <li key={order.id}>
               <div className="px-4 py-4 flex items-center justify-between sm:px-6">
@@ -80,19 +118,36 @@ export default function Orders() {
                   <button
                     onClick={() => viewOrder(order.id)}
                     className="text-gray-400 hover:text-indigo-600 transition-colors p-2"
+                    title="View Order"
                   >
                     <EyeIcon className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => handleDownloadCsv(order.id, order.order_no)}
+                    className="text-gray-400 hover:text-green-600 transition-colors p-2"
+                    title="Export CSV"
+                  >
+                    <ArrowDownTrayIcon className="h-5 w-5" />
                   </button>
                 </div>
               </div>
             </li>
           ))}
-          {orders.length === 0 && (
-            <li className="px-4 py-8 text-center text-gray-500">
-              No orders found.
-            </li>
-          )}
         </ul>
+        {orders.length === 0 && !loading && (
+          <div className="px-6 py-12 text-center text-gray-500 bg-gray-50 flex flex-col items-center">
+            <ClipboardDocumentListIcon className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+            <p>No orders found.</p>
+          </div>
+        )}
+        <Pagination
+          currentPage={currentPage}
+          lastPage={lastPage}
+          onPageChange={setCurrentPage}
+          totalItems={paginationData.total}
+          fromItem={paginationData.from}
+          toItem={paginationData.to}
+        />
       </div>
 
       {/* Order Details Modal */}
