@@ -1,0 +1,156 @@
+prompt:
+
+I want you to generate a POS system for a supermarket with the following requirements:
+
+Tech Stack
+
+Backend: Laravel (latest stable), MySQL database
+
+Frontend: React (hooks + functional components)
+
+Authentication: JWT or Laravel Sanctum
+
+Styling: TailwindCSS or any modern CSS
+
+Database Requirements
+
+Users: id, name, email, password, role (admin/cashier/manager), timestamps
+
+Categories: id, name, timestamps
+
+Products: id, name, SKU, category_id, price, cost_price, stock, barcode, timestamps
+
+Customers (optional): id, name, phone, email, timestamps
+
+Orders: id, order_no, customer_id, total, status (pending/completed/cancelled), paid_at, timestamps
+
+Order_Items: id, order_id, product_id, quantity, price, subtotal, timestamps
+
+Payments: id, order_id, amount, method (cash/card/qr), paid_at, timestamps
+
+Inventory_Movements (optional): id, product_id, type (in/out/sale/adjust), quantity, description, timestamps
+
+Backend Features (Laravel)
+
+Authentication: User login/logout with role-based access
+
+Product Management: CRUD operations with category filter
+
+Order Flow:
+
+Create orders with multiple products
+
+Calculate total, apply discounts if any
+
+Complete order → reduce stock automatically
+
+Cancel order → restore stock
+
+Payments: Track order payments (cash/card/QR)
+
+Inventory Tracking: Adjust stock with logging in Inventory_Movements
+
+Reports: Daily sales, product revenue, low stock alerts
+
+Frontend Features (React)
+
+Dashboard: Show total sales, top products, low stock alerts
+
+POS Screen:
+
+Product search (by barcode or name)
+
+Add/remove items to cart dynamically
+
+Real-time total calculation
+
+Payment Screen: Select payment method → send to backend
+
+Admin Panel: CRUD for products, categories, users
+
+API Requirements
+
+RESTful endpoints for: /auth, /products, /categories, /orders, /order-items, /payments, /inventory
+
+Return JSON responses with success/error status
+
+Use transactions for critical operations (e.g., order completion)
+
+Eloquent Relationships
+
+Product belongs to Category
+
+Order has many OrderItems
+
+Order belongs to Customer (optional)
+
+Order has many Payments
+
+OrderItem belongs to Product
+
+Instructions to AI
+
+Generate database migrations for all tables
+
+Generate Laravel models with relationships
+
+Generate API controllers and routes with basic CRUD
+
+Generate React frontend structure with pages for Dashboard, POS, Orders, Payments, Admin
+
+Include example seeder data for categories, products, and users
+
+Include sample transaction logic when completing an order
+
+Make it ready-to-run locally (Laravel backend + React frontend)
+
+Obey the D.R.Y rule and reuse components  , image authoriazition
+use the system of Request, Resources , Pagination and N+1 function
+use factory , seeder on requirement 
+Separate sectors base on auth, separate duties on respective user
+Add discount section for product
+
+
+please create as a mid-level developer and please add if some important function and feature are remains, 
+
+***************************************************
+
+
+POS System Full Build Task
+Phase 1: Laravel Backend Setup
+ Create Laravel project scaffold
+ Configure .env for MySQL, Sanctum
+ Generate all database migrations (users, categories, products, customers, orders, order_items, payments, inventory_movements)
+ Generate all Eloquent models with relationships
+ Generate Form Requests for validation
+ Generate API Resources for JSON output
+ Generate Factories and Seeders
+ Generate Auth controller (login/logout/me) with Sanctum
+ Generate User controller (role-based)
+ Generate Category controller (CRUD)
+ Generate Product controller (CRUD, discount, image)
+ Generate Customer controller (CRUD)
+ Generate Order controller (create/complete/cancel with transactions)
+ Generate Payment controller
+ Generate Inventory Movement controller
+ Generate Reports controller (daily sales, low stock)
+ Configure API routes with role middleware
+ Generate config files (cors, sanctum)
+Phase 2: React Frontend Setup
+ Create React + Vite project
+ Install and configure TailwindCSS
+ Set up React Router, Axios, Context
+ Auth pages: Login
+ Layout components: Sidebar, Header, ProtectedRoute
+ Dashboard page: sales cards, charts, alerts
+ POS screen: product search, cart, payment modal
+ Orders page: list + detail
+ Payments page
+ Admin panel: products CRUD, categories CRUD, users CRUD
+ Discount UI component
+ API service layer
+Phase 3: Integration & Config
+ README with setup instructions
+ CORS configuration
+
+ ****************************************
