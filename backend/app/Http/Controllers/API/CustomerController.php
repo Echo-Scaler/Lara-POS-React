@@ -16,8 +16,19 @@ class CustomerController extends Controller
 
     public function index(Request $request)
     {
-        $customers = Customer::latest('id')->paginate($request->get('per_page', 15));
-        
+        $query = Customer::latest('id');
+
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        $customers = $query->paginate($request->get('per_page', 15));
+
         return $this->successResponse(CustomerResource::collection($customers), 'Customers retrieved successfully');
     }
 

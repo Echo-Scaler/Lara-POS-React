@@ -6,6 +6,8 @@ import {
   XCircleIcon,
   ClipboardDocumentListIcon,
   ArrowDownTrayIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import Pagination from "../components/Pagination";
 
@@ -22,6 +24,7 @@ export default function Orders() {
   const [paginationData, setPaginationData] = useState({});
   const [filterDate, setFilterDate] = useState(initialDate);
   const [filterTime, setFilterTime] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [searchTrigger, setSearchTrigger] = useState(0);
 
   const formatDateTime = (dateString) => {
@@ -52,6 +55,7 @@ export default function Orders() {
       let url = `/orders?page=${page}`;
       if (filterDate) url += `&date=${filterDate}`;
       if (filterTime) url += `&time=${filterTime}`;
+      if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
 
       const res = await api.get(url);
       const { data } = res.data;
@@ -156,7 +160,9 @@ export default function Orders() {
     if (!Number.isFinite(taxAmount)) {
       taxAmount = Math.round(subtotalAmount * 0.08 * 100) / 100;
     }
-    const totalAmount = Number(order.total ?? subtotalAmount + taxAmount - discountAmount);
+    const totalAmount = Number(
+      order.total ?? subtotalAmount + taxAmount - discountAmount,
+    );
 
     const subtotal = subtotalAmount.toFixed(2);
     const discount = discountAmount.toFixed(2);
@@ -206,12 +212,16 @@ export default function Orders() {
                   <div>Subtotal</div>
                   <div>$${subtotal}</div>
                 </div>
-                ${discountAmount > 0 ? `
+                ${
+                  discountAmount > 0
+                    ? `
                   <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #4b5563; margin-top: 4px;">
                     <div>Discount</div>
                     <div>-$${discount}</div>
                   </div>
-                ` : ""}
+                `
+                    : ""
+                }
                 <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #4b5563; margin-top: 4px;">
                   <div>Tax (8%)</div>
                   <div>$${tax}</div>
@@ -274,7 +284,35 @@ export default function Orders() {
               className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
-          
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Search Order / Customer
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Order # or Customer..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-9 pr-9 border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
+              </div>
+              {searchTerm && (
+                <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm("")}
+                    className="p-1 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="flex items-end gap-2">
             <button
               onClick={() => {
@@ -285,11 +323,12 @@ export default function Orders() {
             >
               Search
             </button>
-            {(filterDate || filterTime) && (
+            {(filterDate || filterTime || searchTerm) && (
               <button
                 onClick={() => {
                   setFilterDate("");
                   setFilterTime("");
+                  setSearchTerm("");
                   setCurrentPage(1);
                   setSearchTrigger((prev) => prev + 1);
                 }}
@@ -385,7 +424,7 @@ export default function Orders() {
         >
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div
-              className="fixed inset-0 bg-blue-200 bg-opacity-75 transition-opacity opacity-100"
+              className="fixed inset-0 bg-blue-100 bg-opacity-75 transition-opacity opacity-100"
               aria-hidden="true"
               onClick={() => setSelectedOrder(null)}
             ></div>
@@ -453,10 +492,9 @@ export default function Orders() {
                   <span className="text-gray-500">Tax (8%):</span>
                   <span>
                     $
-                    {(
-                      Number.isFinite(Number(selectedOrder.tax))
-                        ? Number(selectedOrder.tax)
-                        : Number(selectedOrder.subtotal) * 0.08
+                    {(Number.isFinite(Number(selectedOrder.tax))
+                      ? Number(selectedOrder.tax)
+                      : Number(selectedOrder.subtotal) * 0.08
                     ).toFixed(2)}
                   </span>
                 </div>

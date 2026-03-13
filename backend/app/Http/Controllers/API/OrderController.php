@@ -33,6 +33,16 @@ class OrderController extends Controller
             $query->whereTime('created_at', '>=', $request->time);
         }
 
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('order_no', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
         $orders = $query->latest()->paginate($request->get('per_page', 10));
 
         return $this->successResponse(OrderResource::collection($orders), 'Orders retrieved successfully');
@@ -218,10 +228,10 @@ class OrderController extends Controller
             fputcsv($file, ['Cashier', $order->user->name ?? 'N/A']);
             fputcsv($file, ['Customer', $order->customer->name ?? 'Walk-in']);
             fputcsv($file, ['Status', ucfirst($order->status)]);
-            fputcsv($file, ['Subtotal', '$' . number_format($order->subtotal, 2)]);
-            fputcsv($file, ['Discount', '$' . number_format($order->discount_amount, 2)]);
-            fputcsv($file, ['Tax (8%)', '$' . number_format($order->tax, 2)]);
-            fputcsv($file, ['Total', '$' . number_format($order->total, 2)]);
+            fputcsv($file, ['Subtotal', '$' . number_format((float)$order->subtotal, 2)]);
+            fputcsv($file, ['Discount', '$' . number_format((float)$order->discount_amount, 2)]);
+            fputcsv($file, ['Tax (8%)', '$' . number_format((float)$order->tax, 2)]);
+            fputcsv($file, ['Total', '$' . number_format((float)$order->total, 2)]);
             fputcsv($file, []);
 
             // Payments Section

@@ -22,8 +22,22 @@ class UserController extends Controller
             return $this->errorResponse('Unauthorized', 403);
         }
 
-        $users = User::latest('id')->paginate($request->get('per_page', 15));
-        
+        $query = User::latest('id');
+
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('role')) {
+            $query->where('role', $request->get('role'));
+        }
+
+        $users = $query->paginate($request->get('per_page', 15));
+
         return $this->successResponse(UserResource::collection($users), 'Users retrieved successfully');
     }
 

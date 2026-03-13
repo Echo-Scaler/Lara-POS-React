@@ -814,7 +814,7 @@ export default function POS() {
               &#8203;
             </span>
 
-            <div className="inline-block align-bottom bg-gray-100 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:align-middle sm:max-w-sm w-full print:shadow-none print:max-w-full print:overflow-visible print:border-none print:w-[300px] print:m-0 print:p-0 opacity-100 translate-y-0 sm:scale-100">
+            <div className="inline-block align-middle bg-gray-100 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-sm w-full print:shadow-none print:max-w-full print:overflow-visible print:border-none print:w-[300px] print:m-0 print:p-0 opacity-100 translate-y-0 sm:scale-100 my-8">
               {/* Added Success feedback */}
               <div className="bg-green-600 px-6 py-4 flex items-center justify-center gap-2 print:hidden">
                 <CheckCircleIcon className="w-6 h-6 text-white" />
@@ -855,7 +855,7 @@ export default function POS() {
                   </div>
                 </div>
 
-                <div className="mb-4">
+                <div className="mb-4 max-h-[40vh] sm:max-h-[380px] overflow-y-auto pr-1 -mr-1 custom-scrollbar print:max-h-none print:overflow-visible print:pr-0 print:mr-0">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-dashed border-gray-300">

@@ -5,6 +5,8 @@ import {
   TrashIcon,
   PencilIcon,
   CubeIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import Pagination from "../../components/Pagination";
 
@@ -21,15 +23,21 @@ export default function Categories() {
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [paginationData, setPaginationData] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTrigger, setSearchTrigger] = useState(0);
 
   useEffect(() => {
     fetchCategories(currentPage);
-  }, [currentPage]);
+  }, [currentPage, searchTrigger]);
 
   const fetchCategories = async (page = 1) => {
     setLoading(true);
     try {
-      const res = await api.get(`/categories?page=${page}`);
+      let url = `/categories?page=${page}`;
+      if (searchTerm) {
+        url += `&search=${encodeURIComponent(searchTerm)}`;
+      }
+      const res = await api.get(url);
       const { data } = res.data;
       const categoriesData = data.data || data;
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
@@ -60,8 +68,20 @@ export default function Categories() {
     setShowModal(true);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSearch = (e) => {
     e.preventDefault();
+    setCurrentPage(1);
+    setSearchTrigger((prev) => prev + 1);
+  };
+
+  const handleClear = () => {
+    setSearchTerm("");
+    setCurrentPage(1);
+    setSearchTrigger((prev) => prev + 1);
+  };
+
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
     try {
       if (editId) {
         await api.put(`/categories/${editId}`, formData);
@@ -87,18 +107,57 @@ export default function Categories() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading && categories.length === 0) return <div className="p-4 text-center">Loading...</div>;
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <h1 className="text-2xl font-semibold text-gray-900">Categories</h1>
-        <button
-          onClick={() => openModal()}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-        >
-          <PlusIcon className="-ml-1 mr-2 h-5 w-5" /> Add Category
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <form
+            onSubmit={handleSearch}
+            className="relative flex items-center gap-3 flex-1"
+          >
+            <div className="relative flex-1 sm:w-64">
+              <input
+                type="text"
+                placeholder="Search categories..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out"
+              />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon
+                  className="h-5 w-5 text-gray-400"
+                  aria-hidden="true"
+                />
+              </div>
+              {searchTerm && (
+                <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
+                  <button
+                    type="button"
+                    onClick={handleClear}
+                    className="p-1 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <XMarkIcon className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Search
+            </button>
+          </form>
+          <button
+            onClick={() => openModal()}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            <PlusIcon className="-ml-1 mr-2 h-5 w-5" /> Add Category
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col min-h-0 relative mb-4">

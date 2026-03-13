@@ -22,6 +22,10 @@ class CategoryController extends Controller
             $query->where('is_active', $request->boolean('active'));
         }
 
+        if ($request->filled('search')) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+
         $perPage = $request->get('per_page', 9);
         $categories = $query->orderBy('name')->paginate($perPage);
 

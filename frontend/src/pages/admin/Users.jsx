@@ -5,6 +5,8 @@ import {
   TrashIcon,
   PencilIcon,
   UsersIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "../../contexts/AuthContext";
 import Pagination from "../../components/Pagination";
@@ -18,6 +20,7 @@ export default function Users() {
   const [paginationData, setPaginationData] = useState({});
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
+  const [searchTrigger, setSearchTrigger] = useState(0);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -30,12 +33,15 @@ export default function Users() {
 
   useEffect(() => {
     fetchUsers(currentPage);
-  }, [currentPage]);
+  }, [currentPage, searchTrigger, roleFilter]);
 
   const fetchUsers = async (page = 1) => {
     setLoading(true);
     try {
-      const res = await api.get(`/users?page=${page}`);
+      let url = `/users?page=${page}`;
+      if (query) url += `&search=${encodeURIComponent(query)}`;
+      if (roleFilter) url += `&role=${roleFilter}`;
+      const res = await api.get(url);
       const { data } = res.data; // This is the ResourceCollection
       const usersData = data.data || data;
       setUsers(Array.isArray(usersData) ? usersData : []);
@@ -106,17 +112,21 @@ export default function Users() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  const handleSearch = (e) => {
+    if (e) e.preventDefault();
+    setCurrentPage(1);
+    setSearchTrigger((prev) => prev + 1);
+  };
 
-  const filteredUsers = users.filter((u) => {
-    const q = query.trim().toLowerCase();
-    const matchesQuery =
-      !q ||
-      u.name?.toLowerCase().includes(q) ||
-      u.email?.toLowerCase().includes(q);
-    const matchesRole = !roleFilter || u.role === roleFilter;
-    return matchesQuery && matchesRole;
-  });
+  const handleClear = () => {
+    setQuery("");
+    setCurrentPage(1);
+    setSearchTrigger((prev) => prev + 1);
+  };
+
+  if (loading && users.length === 0) return <div className="p-4 text-center">Loading...</div>;
+
+  // Removed local filtering
 
   return (
     <div className="space-y-6">
@@ -143,25 +153,57 @@ export default function Users() {
           </button>
         </div>
 
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="sm:col-span-2">
-            <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">
-              Search
-            </label>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by name or email..."
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
-            />
-          </div>
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <form
+            onSubmit={handleSearch}
+            className="sm:col-span-3 flex flex-col sm:flex-row gap-3"
+          >
+            <div className="flex-1">
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">
+                Search
+              </label>
+              <div className="relative">
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search by name or email..."
+                  className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 py-2.5 text-sm font-semibold text-gray-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                {query && (
+                  <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
+                    <button
+                      type="button"
+                      onClick={handleClear}
+                      className="p-1 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                    >
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex items-end">
+              <button
+                type="submit"
+                className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl bg-white border border-slate-200 px-4 py-2.5 text-sm font-extrabold text-gray-700 hover:bg-slate-50 shadow-sm transition-all"
+              >
+                Search
+              </button>
+            </div>
+          </form>
           <div>
             <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">
               Role
             </label>
             <select
               value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
+              onChange={(e) => {
+                setRoleFilter(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
             >
               <option value="">All Roles</option>
@@ -184,7 +226,7 @@ export default function Users() {
         </div>
 
         <ul className="divide-y divide-gray-100 flex-1">
-          {filteredUsers.map((user) => (
+          {users.map((user) => (
             <li key={user.id} className="px-4 py-4 sm:px-6">
               <div className="md:hidden flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -291,7 +333,7 @@ export default function Users() {
             </li>
           ))}
         </ul>
-        {filteredUsers.length === 0 && !loading && (
+        {users.length === 0 && !loading && (
           <div className="px-6 py-12 text-center text-gray-500 bg-gray-50 flex flex-col items-center">
             <UsersIcon className="mx-auto h-12 w-12 text-gray-300 mb-3" />
             <p className="font-semibold">No users found.</p>
