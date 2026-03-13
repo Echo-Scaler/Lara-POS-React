@@ -255,149 +255,211 @@ export default function Orders() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading && orders.length === 0)
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <h1 className="text-2xl font-semibold text-gray-900">Order History</h1>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Date
-            </label>
-            <input
-              type="date"
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-              className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Time (After)
-            </label>
-            <input
-              type="time"
-              value={filterTime}
-              onChange={(e) => setFilterTime(e.target.value)}
-              className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Search Order / Customer
-            </label>
-            <div className="relative">
+      <div className="flex flex-col xl:flex-row xl:justify-between xl:items-end gap-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Order History</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            View and manage all past transactions and their details.
+          </p>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex-1 max-w-4xl">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
+                Filter Date
+              </label>
               <input
-                type="text"
-                placeholder="Order # or Customer..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-9 pr-9 border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
               />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
-              </div>
-              {searchTerm && (
-                <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => setSearchTerm("")}
-                    className="p-1 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100"
-                  >
-                    <XMarkIcon className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
             </div>
-          </div>
-
-          <div className="flex items-end gap-2">
-            <button
-              onClick={() => {
-                setCurrentPage(1);
-                setSearchTrigger((prev) => prev + 1);
-              }}
-              className="py-1.5 px-4 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Search
-            </button>
-            {(filterDate || filterTime || searchTerm) && (
-              <button
-                onClick={() => {
-                  setFilterDate("");
-                  setFilterTime("");
-                  setSearchTerm("");
-                  setCurrentPage(1);
-                  setSearchTrigger((prev) => prev + 1);
-                }}
-                className="py-1.5 px-3 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none"
-              >
-                Clear
-              </button>
-            )}
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
+                Time (After)
+              </label>
+              <input
+                type="time"
+                value={filterTime}
+                onChange={(e) => setFilterTime(e.target.value)}
+                className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
+              />
+            </div>
+            <div className="md:col-span-2 flex gap-2">
+              <div className="flex-1 relative">
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
+                  Search Order / Customer
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Order # or Customer..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="block w-full pl-9 pr-9 border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
+                  </div>
+                  {searchTerm && (
+                    <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
+                      <button
+                        type="button"
+                        onClick={() => setSearchTerm("")}
+                        className="p-1 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                      >
+                        <XMarkIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-end gap-2">
+                <button
+                  onClick={() => {
+                    setCurrentPage(1);
+                    setSearchTrigger((prev) => prev + 1);
+                  }}
+                  className="py-2 px-4 text-sm font-semibold text-white bg-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-indigo-100"
+                >
+                  Apply
+                </button>
+                {(filterDate || filterTime || searchTerm) && (
+                  <button
+                    onClick={() => {
+                      setFilterDate("");
+                      setFilterTime("");
+                      setSearchTerm("");
+                      setCurrentPage(1);
+                      setSearchTrigger((prev) => prev + 1);
+                    }}
+                    className="py-2 px-4 text-sm font-semibold text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none transition-all"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white shadow-sm overflow-hidden sm:rounded-xl border border-gray-200 flex flex-col">
-        <ul className="divide-y divide-gray-100 flex-1">
-          {orders.map((order) => (
-            <li key={order.id}>
-              <div className="px-4 py-4 flex items-center justify-between sm:px-6">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-indigo-600 truncate">
-                    Order: {order.order_no}
-                  </p>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {formatDateTime(order.created_at)} · Cashier:{" "}
-                    {order.user.name}
-                  </p>
-                </div>
-                <div className="flex-shrink-0 ml-4 flex items-center gap-4">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${order.status === "completed" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-                  >
-                    {order.status}
-                  </span>
-                  <span className="text-base font-bold text-gray-900">
+      <div className="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden flex flex-col">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
+                >
+                  Order Info
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
+                >
+                  Customer
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
+                >
+                  Status
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider"
+                >
+                  Total
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider"
+                >
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {orders.map((order) => (
+                <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-indigo-600">
+                        #{order.order_no}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {formatDateTime(order.created_at)}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {order.customer?.name || "Walk-in Customer"}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Cashier: {order.user.name}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full uppercase tracking-wider ${
+                        order.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {order.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-900">
                     ${parseFloat(order.total).toFixed(2)}
-                  </span>
-                  <button
-                    onClick={() => viewOrder(order.id)}
-                    className="text-gray-400 hover:text-indigo-600 transition-colors p-2"
-                    title="View Order"
-                  >
-                    <EyeIcon className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => handleDownloadCsv(order.id, order.order_no)}
-                    className="text-gray-400 hover:text-green-600 transition-colors p-2"
-                    title="Export CSV"
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      <ArrowDownTrayIcon className="h-5 w-5" />
-                      <span className="text-xs font-bold">CSV</span>
-                    </span>
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleDownloadReceipt(order.id, order.order_no)
-                    }
-                    className="text-gray-400 hover:text-gray-900 transition-colors p-2"
-                    title="Download Receipt"
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      <ArrowDownTrayIcon className="h-5 w-5" />
-                      <span className="text-xs font-bold">RECEIPT</span>
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex justify-end gap-1">
+                      <button
+                        onClick={() => viewOrder(order.id)}
+                        className="text-gray-400 hover:text-indigo-600 bg-gray-50 hover:bg-indigo-50 p-2 rounded-lg transition-all"
+                        title="View Details"
+                      >
+                        <EyeIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDownloadCsv(order.id, order.order_no)}
+                        className="text-gray-400 hover:text-green-600 bg-gray-50 hover:bg-green-50 px-2 py-1 rounded-lg transition-all flex items-center gap-1"
+                        title="Export CSV"
+                      >
+                        <ArrowDownTrayIcon className="h-4 w-4" />
+                        <span className="text-[10px] font-bold">CSV</span>
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleDownloadReceipt(order.id, order.order_no)
+                        }
+                        className="text-gray-400 hover:text-gray-900 bg-gray-50 hover:bg-gray-200 px-2 py-1 rounded-lg transition-all flex items-center gap-1"
+                        title="Download Receipt"
+                      >
+                        <ArrowDownTrayIcon className="h-4 w-4" />
+                        <span className="text-[10px] font-bold">HTML</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {orders.length === 0 && !loading && (
           <div className="px-6 py-12 text-center text-gray-500 bg-gray-50 flex flex-col items-center">
             <ClipboardDocumentListIcon className="mx-auto h-12 w-12 text-gray-300 mb-3" />
@@ -434,7 +496,7 @@ export default function Orders() {
             >
               &#8203;
             </span>
-            <div className="inline-block align-bottom bg-gray-100 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6 opacity-100 translate-y-0 sm:scale-100">
+            <div className="inline-block align-bottom bg-white rounded-2xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-8 opacity-100 translate-y-0 sm:scale-100 border border-gray-100">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-lg leading-6 font-bold text-gray-900">
@@ -504,17 +566,17 @@ export default function Orders() {
                 </div>
               </div>
 
-              <div className="mt-6 sm:flex sm:flex-row-reverse space-y-2 sm:space-y-0 sm:space-x-2 sm:space-x-reverse">
+              <div className="mt-8 sm:flex sm:flex-row-reverse gap-3">
                 <button
                   onClick={() => setSelectedOrder(null)}
-                  className="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:w-auto sm:text-sm"
+                  className="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-6 py-2.5 bg-white text-base font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none transition-all sm:w-auto sm:text-sm"
                 >
                   Close
                 </button>
                 {selectedOrder.status === "completed" && (
                   <button
                     onClick={() => handleCancelOrder(selectedOrder.id)}
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:w-auto sm:text-sm"
+                    className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-6 py-2.5 bg-red-600 text-base font-semibold text-white hover:bg-red-700 focus:outline-none transition-all sm:w-auto sm:text-sm shadow-red-100"
                   >
                     <XCircleIcon className="mr-2 h-5 w-5" /> Cancel Order
                   </button>

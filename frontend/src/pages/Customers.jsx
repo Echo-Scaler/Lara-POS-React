@@ -116,14 +116,22 @@ export default function Customers() {
     }
   };
 
-  if (loading) return <div className="p-6 text-center">Loading...</div>;
+  if (loading && customers.length === 0)
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">
-          Customer Management
-        </h1>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Manage your customer database and viewing their contact information.
+          </p>
+        </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <form
             onSubmit={handleSearch}
@@ -135,7 +143,7 @@ export default function Customers() {
                 placeholder="Search customers..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out"
+                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out"
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <MagnifyingGlassIcon
@@ -148,7 +156,7 @@ export default function Customers() {
                   <button
                     type="button"
                     onClick={handleClear}
-                    className="p-1 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="p-1 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none"
                   >
                     <XMarkIcon className="h-4 w-4" aria-hidden="true" />
                   </button>
@@ -157,57 +165,100 @@ export default function Customers() {
             </div>
             <button
               type="submit"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
             >
               Search
             </button>
           </form>
           <button
             onClick={() => openModal()}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+            className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
           >
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" /> Add Customer
           </button>
         </div>
       </div>
 
-      <div className="bg-white shadow-sm overflow-hidden sm:rounded-xl border border-gray-200 flex flex-col">
-        <ul className="divide-y divide-gray-100 flex-1">
-          {customers.map((customer) => (
-            <li
-              key={customer.id}
-              className="px-4 py-4 flex items-center justify-between sm:px-6"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-indigo-600 truncate">
-                  {customer.name}
-                </p>
-                <div className="mt-1 flex flex-col sm:flex-row sm:gap-4 text-sm text-gray-500">
-                  <span className="truncate">
-                    {customer.email || "No email"}
-                  </span>
-                  <span className="truncate">
-                    {customer.phone || "No phone"}
-                  </span>
-                </div>
-              </div>
-              <div className="ml-5 flex-shrink-0 flex items-center space-x-2">
-                <button
-                  onClick={() => openModal(customer)}
-                  className="text-indigo-600 hover:text-indigo-900 p-2"
+      <div className="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden flex flex-col">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  <PencilIcon className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => handleDelete(customer.id)}
-                  className="text-red-600 hover:text-red-900 p-2"
+                  Customer Name
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  <TrashIcon className="h-5 w-5" />
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+                  Contact Info
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Address
+                </th>
+                <th scope="col" className="relative px-6 py-3">
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {customers.map((customer) => (
+                <tr key={customer.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <span className="text-indigo-700 font-bold text-lg">
+                          {customer.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-semibold text-gray-900">
+                          {customer.name}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          ID: #{customer.id}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{customer.email || "No email"}</div>
+                    <div className="text-sm text-gray-500">{customer.phone || "No phone"}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-500 line-clamp-1 max-w-xs">
+                      {customer.address || "No address provided"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => openModal(customer)}
+                        className="text-indigo-600 hover:text-indigo-900 p-2 rounded-lg hover:bg-indigo-50 transition-colors"
+                        title="Edit"
+                      >
+                        <PencilIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(customer.id)}
+                        className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                        title="Delete"
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {customers.length === 0 && !loading && (
           <div className="px-6 py-12 text-center text-gray-500 bg-gray-50 flex flex-col items-center">
             <UserGroupIcon className="mx-auto h-12 w-12 text-gray-300 mb-3" />
@@ -243,16 +294,19 @@ export default function Customers() {
             >
               &#8203;
             </span>
-            <div className="inline-block align-bottom bg-gray-100 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 opacity-100 translate-y-0 sm:scale-100">
+            <div className="inline-block align-bottom bg-white rounded-2xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-8 opacity-100 translate-y-0 sm:scale-100 border border-gray-100">
               <form
                 id="customer-form"
                 onSubmit={handleSubmit}
                 className="space-y-4"
               >
                 <h3
-                  className="text-lg font-medium leading-6 text-gray-900 mb-4"
+                  className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2"
                   id="modal-title"
                 >
+                  <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                    <UserGroupIcon className="h-6 w-6" />
+                  </div>
                   {editId ? "Edit Customer" : "Add New Customer"}
                 </h3>
                 <div>
@@ -309,22 +363,22 @@ export default function Customers() {
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
                 </div>
-                <div className="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
-                  <button
-                    id="customer-submit-button"
-                    type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    {editId ? "Save" : "Add"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 sm:mt-0 sm:w-auto sm:text-sm"
-                  >
-                    Cancel
-                  </button>
-                </div>
+                  <div className="mt-8 sm:flex sm:flex-row-reverse gap-3">
+                    <button
+                      id="customer-submit-button"
+                      type="submit"
+                      className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-6 py-2.5 bg-indigo-600 text-base font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto sm:text-sm transition-all shadow-indigo-200"
+                    >
+                      {editId ? "Save Changes" : "Create Customer"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowModal(false)}
+                      className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-6 py-2.5 bg-white text-base font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 sm:mt-0 sm:w-auto sm:text-sm transition-all"
+                    >
+                      Cancel
+                    </button>
+                  </div>
               </form>
             </div>
           </div>
