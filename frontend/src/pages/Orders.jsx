@@ -385,7 +385,7 @@ export default function Orders() {
         >
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity opacity-100"
+              className="fixed inset-0 bg-blue-100 bg-opacity-75 transition-opacity opacity-100"
               aria-hidden="true"
               onClick={() => setSelectedOrder(null)}
             ></div>
@@ -395,7 +395,7 @@ export default function Orders() {
             >
               &#8203;
             </span>
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6 opacity-100 translate-y-0 sm:scale-100">
+            <div className="inline-block align-bottom bg-gray-100 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6 opacity-100 translate-y-0 sm:scale-100">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-lg leading-6 font-bold text-gray-900">
