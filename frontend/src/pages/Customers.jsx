@@ -31,42 +31,17 @@ export default function Customers() {
     setLoading(true);
     try {
       const res = await api.get(`/customers?page=${page}`);
-      const { data } = res.data; // This is      const { data } = res.data;
-      const customersData = data.data || data;
-      setCustomers(Array.isArray(customersData) ? customersData : []);
-      if (data.meta) {
-        // Assuming setPagination is a typo and should be setPaginationData
-        // If setPagination is a new state setter, it needs to be defined.
-        // For now, I'll assume it's a typo and keep it as is per instruction.
-        // If it's meant to be setPaginationData, please clarify.
-        // setPagination(data.meta); // This line is problematic if setPagination is not defined.
-        // I will assume the user meant to replace the entire block and the new line is part of it.
-        // The instruction provided an incomplete block, I'm completing it to be syntactically correct.
-        // Original:
-        // const { data } = res.data; // This is the ResourceCollection
-        // setCustomers(data.data);
-        // if (data.meta) {
-        //   setCurrentPage(data.meta.current_page);
-        //   setLastPage(data.meta.last_page);
-        //   setPaginationData(data.meta);
-        // }
-        // New interpretation based on instruction:
-        // const { data } = res.data; // This is      const { data } = res.data;
-        // const customersData = data.data || data;
-        // setCustomers(Array.isArray(customersData) ? customersData : []);
-        // if (data.meta) setPagination(data.meta); // This line is problematic if setPagination is not defined.
-        //   setCurrentPage(data.meta.current_page);
-        //   setLastPage(data.meta.last_page);
-        //   setPaginationData(data.meta);
-        // }
-        // The instruction's `if (data.meta) setPagination(data.meta);` followed by unbraced lines and a closing brace is syntactically incorrect.
-        // I will assume the intent was to have a block for `if (data.meta)` that includes all pagination setters.
-        // And that `setPagination(data.meta);` was intended to be `setPaginationData(data.meta);` or a new state.
-        // Given the existing `setPaginationData`, I will use that.
-        setPaginationData(data.meta); // Assuming setPagination was a typo for setPaginationData
-        setCurrentPage(data.meta.current_page);
-        setLastPage(data.meta.last_page);
-        setPaginationData(data.meta);
+      const responseData = res.data.data; // This is the ResourceCollection wrapped in successResponse
+      
+      if (responseData.data) {
+        setCustomers(responseData.data);
+        if (responseData.meta) {
+          setPaginationData(responseData.meta);
+          setCurrentPage(responseData.meta.current_page);
+          setLastPage(responseData.meta.last_page);
+        }
+      } else {
+        setCustomers(Array.isArray(responseData) ? responseData : []);
       }
     } catch (e) {
       console.error(e);
@@ -184,29 +159,41 @@ export default function Customers() {
           currentPage={currentPage}
           lastPage={lastPage}
           onPageChange={setCurrentPage}
-          totalItems={paginationData.total}
-          fromItem={paginationData.from}
-          toItem={paginationData.to}
+          totalItems={paginationData.total || 0}
+          fromItem={paginationData.from || 0}
+          toItem={paginationData.to || 0}
         />
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-10 overflow-y-auto">
+        <div
+          className="fixed inset-0 z-10 overflow-y-auto"
+          aria-labelledby="modal-title"
+          role="dialog"
+          aria-modal="true"
+        >
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75"
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity opacity-100"
+              aria-hidden="true"
               onClick={() => setShowModal(false)}
             ></div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">
+            <span
+              className="hidden sm:inline-block sm:align-middle sm:h-screen"
+              aria-hidden="true"
+            >
               &#8203;
             </span>
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 opacity-100 translate-y-0 sm:scale-100">
               <form
                 id="customer-form"
                 onSubmit={handleSubmit}
                 className="space-y-4"
               >
-                <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                <h3
+                  className="text-lg font-medium leading-6 text-gray-900 mb-4"
+                  id="modal-title"
+                >
                   {editId ? "Edit Customer" : "Add New Customer"}
                 </h3>
                 <div>
