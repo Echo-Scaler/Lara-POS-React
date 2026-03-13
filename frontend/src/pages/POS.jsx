@@ -570,7 +570,6 @@ export default function POS() {
         </div>
       </div>
 
-      {/* Modern Checkout Modal */}
       {showCheckout && (
         <div
           className="fixed inset-0 z-50 overflow-y-auto print:hidden"
@@ -580,14 +579,17 @@ export default function POS() {
         >
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div
-              className="fixed inset-0 bg-gray-400/40 backdrop-blur-md transition-opacity"
+              className="fixed inset-0 bg-blue-100/75 transition-opacity opacity-100"
+              aria-hidden="true"
               onClick={() => !isProcessing && setShowCheckout(false)}
             ></div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">
+            <span
+              className="hidden sm:inline-block sm:align-middle sm:h-screen"
+              aria-hidden="true"
+            >
               &#8203;
             </span>
-
-            <div className="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full opacity-100 translate-y-0 sm:scale-100 border border-white/30">
+            <div className="inline-block align-bottom bg-gray-100 rounded-3xl text-left overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full opacity-100 translate-y-0 sm:scale-100 border border-white/30">
               {/* Header */}
               <div className="bg-gradient-to-br from-indigo-400 via-slate-500 to-gray-200 px-6 py-5 text-center relative overflow-hidden">
                 <div className="absolute -top-24 -right-24 w-56 h-56 bg-white/10 rounded-full blur-2xl"></div>
@@ -791,16 +793,36 @@ export default function POS() {
 
       {/* Receipt Modal & Print Area */}
       {completedOrder && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="modal-title"
+          role="dialog"
+          aria-modal="true"
+        >
           {/* Modal Background for screen viewing, hidden on print */}
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity print:hidden"></div>
+          <div
+            className="fixed inset-0 bg-blue-100/75 transition-opacity opacity-100 print:hidden"
+            aria-hidden="true"
+            onClick={() => setCompletedOrder(null)}
+          ></div>
 
           <div className="flex items-center justify-center min-h-screen p-4 text-center">
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen print:hidden">
+            <span
+              className="hidden sm:inline-block sm:align-middle sm:h-screen print:hidden"
+              aria-hidden="true"
+            >
               &#8203;
             </span>
 
-            <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:align-middle sm:max-w-sm w-full print:shadow-none print:max-w-full print:overflow-visible print:border-none print:w-[300px] print:m-0 print:p-0">
+            <div className="inline-block align-bottom bg-gray-100 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:align-middle sm:max-w-sm w-full print:shadow-none print:max-w-full print:overflow-visible print:border-none print:w-[300px] print:m-0 print:p-0 opacity-100 translate-y-0 sm:scale-100">
+              {/* Added Success feedback */}
+              <div className="bg-green-600 px-6 py-4 flex items-center justify-center gap-2 print:hidden">
+                <CheckCircleIcon className="w-6 h-6 text-white" />
+                <span className="text-white font-black uppercase tracking-wider text-sm">
+                  Payment Successful
+                </span>
+              </div>
+
               {/* Receipt Content */}
               <div className="p-6 print:p-0">
                 <div className="text-center mb-6">

@@ -385,7 +385,7 @@ export default function Orders() {
         >
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div
-              className="fixed inset-0 bg-blue-100 bg-opacity-75 transition-opacity opacity-100"
+              className="fixed inset-0 bg-blue-200 bg-opacity-75 transition-opacity opacity-100"
               aria-hidden="true"
               onClick={() => setSelectedOrder(null)}
             ></div>
