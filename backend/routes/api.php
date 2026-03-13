@@ -12,6 +12,7 @@ use App\Http\Controllers\API\InventoryMovementController;
 use App\Http\Controllers\API\ReportController;
 use App\Http\Controllers\API\UserController;
 
+Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {

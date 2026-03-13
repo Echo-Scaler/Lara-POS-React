@@ -25,30 +25,27 @@ class CategoryController extends Controller
         $perPage = $request->get('per_page', 9);
         $categories = $query->orderBy('name')->paginate($perPage);
 
-        return CategoryResource::collection($categories)->additional([
-            'success' => true,
-            'message' => 'Categories retrieved successfully'
-        ]);
+        return $this->successResponse(CategoryResource::collection($categories), 'Categories retrieved successfully');
     }
 
     public function store(StoreCategoryRequest $request)
     {
         $category = Category::create($request->validated());
 
-        return $this->successResponse((new CategoryResource($category))->resolve(), 'Category created successfully', 201);
+        return $this->successResponse(new CategoryResource($category), 'Category created successfully', 201);
     }
 
     public function show(Category $category)
     {
         $category->loadCount('products');
-        return $this->successResponse((new CategoryResource($category))->resolve());
+        return $this->successResponse(new CategoryResource($category));
     }
 
     public function update(UpdateCategoryRequest $request, Category $category)
     {
         $category->update($request->validated());
 
-        return $this->successResponse((new CategoryResource($category))->resolve(), 'Category updated successfully');
+        return $this->successResponse(new CategoryResource($category), 'Category updated successfully');
     }
 
     public function destroy(Category $category)

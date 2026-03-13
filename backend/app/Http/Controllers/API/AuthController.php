@@ -6,41 +6,68 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 use App\Traits\ApiResponse;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Resources\UserResource;
 
 class AuthController extends Controller
 {
     use ApiResponse;
 
-    public function login(Request $request)
+    /**
+     * Handle user registration.
+     *
+     * @param RegisterRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function register(RegisterRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role ?? 'cashier',
         ]);
 
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return $this->successResponse([
+            'user' => new UserResource($user),
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+        ], 'User registered successfully', 201);
+    }
+
+    /**
+     * Handle authentication attempt.
+     *
+     * @param LoginRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function login(LoginRequest $request)
+    {
         $user = User::where('email', $request->email)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return $this->errorResponse('Invalid credentials', 401);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return $this->successResponse([
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'avatar' => $user->avatar,
-            ],
+            'user' => new UserResource($user),
             'access_token' => $token,
             'token_type' => 'Bearer',
         ], 'Login successful');
     }
 
+    /**
+     * Log the user out (Revoke the token).
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -48,8 +75,14 @@ class AuthController extends Controller
         return $this->successResponse(null, 'Logged out successfully');
     }
 
+    /**
+     * Get the authenticated User.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function me(Request $request)
     {
-        return $this->successResponse($request->user());
+        return $this->successResponse(new UserResource($request->user()));
     }
 }

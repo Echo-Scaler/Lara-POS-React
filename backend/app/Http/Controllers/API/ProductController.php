@@ -18,7 +18,7 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with('category'); // N+1 prevention
+        $query = Product::with('category'); // Eager loading for N+1 prevention
 
         if ($request->has('search') && !empty($request->search)) {
             $query->where('name', 'like', '%' . $request->search . '%')
@@ -37,14 +37,10 @@ class ProductController extends Controller
             $query->where('stock', '<', 7);
         }
 
-        // Pagination setup
         $perPage = $request->get('per_page', 15);
         $products = $query->latest()->paginate($perPage);
 
-        return ProductResource::collection($products)->additional([
-            'success' => true,
-            'message' => 'Products retrieved successfully'
-        ]);
+        return $this->successResponse(ProductResource::collection($products), 'Products retrieved successfully');
     }
 
     public function store(StoreProductRequest $request)
@@ -58,13 +54,13 @@ class ProductController extends Controller
         $product = Product::create($data);
         $product->load('category');
 
-        return $this->successResponse((new ProductResource($product))->resolve(), 'Product created successfully', 201);
+        return $this->successResponse(new ProductResource($product), 'Product created successfully', 201);
     }
 
     public function show(Product $product)
     {
         $product->load('category');
-        return $this->successResponse((new ProductResource($product))->resolve());
+        return $this->successResponse(new ProductResource($product));
     }
 
     public function update(UpdateProductRequest $request, Product $product)
@@ -72,7 +68,6 @@ class ProductController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
-            // Delete old image
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
@@ -82,7 +77,7 @@ class ProductController extends Controller
         $product->update($data);
         $product->load('category');
 
-        return $this->successResponse((new ProductResource($product))->resolve(), 'Product updated successfully');
+        return $this->successResponse(new ProductResource($product), 'Product updated successfully');
     }
 
     public function destroy(Product $product)

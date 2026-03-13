@@ -35,9 +35,7 @@ class OrderController extends Controller
 
         $orders = $query->latest()->paginate($request->get('per_page', 10));
 
-        return OrderResource::collection($orders)->additional([
-            'success' => true
-        ]);
+        return $this->successResponse(OrderResource::collection($orders), 'Orders retrieved successfully');
     }
 
     public function store(StoreOrderRequest $request)

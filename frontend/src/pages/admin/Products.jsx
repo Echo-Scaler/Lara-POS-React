@@ -43,9 +43,54 @@ export default function Products() {
   const [editId, setEditId] = useState(null);
   const [imageFile, setImageFile] = useState(null);
 
+  const fetchProducts = async (page = 1) => {
+    setLoading(true);
+    try {
+      let url = `/products?page=${page}`;
+      if (initialFilter === "low_stock") {
+        url += "&low_stock=1";
+      }
+      if (searchTerm) {
+        url += `&search=${encodeURIComponent(searchTerm)}`;
+      }
+      const res = await api.get(url);
+      const { data } = res.data;
+      const productsData = data.data || data;
+      setProducts(Array.isArray(productsData) ? productsData : []);
+      
+      if (data.meta) {
+        setPaginationData(data.meta);
+        setCurrentPage(data.meta.current_page);
+        setLastPage(data.meta.last_page); // Changed from setTotalPages to setLastPage to match state
+      } else {
+        setPaginationData({});
+        setCurrentPage(1); // Reset current page if no meta data
+        setLastPage(1); // Reset last page if no meta data
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get("/categories?per_page=100");
+      // Categories index also uses Resource::collection()
+      setCategories(res.data.data.data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     fetchProducts(currentPage);
   }, [currentPage, initialFilter, searchTrigger]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -58,43 +103,6 @@ export default function Products() {
     setCurrentPage(1);
     setSearchTrigger((prev) => prev + 1);
   };
-
-  const fetchProducts = async (page = 1) => {
-    setLoading(true);
-    try {
-      let url = `/products?page=${page}`;
-      if (initialFilter === "low_stock") {
-        url += "&low_stock=1";
-      }
-      if (searchTerm) {
-        url += `&search=${encodeURIComponent(searchTerm)}`;
-      }
-      const res = await api.get(url);
-      setProducts(res.data.data); // data structure from API resource
-      if (res.data.meta) {
-        setCurrentPage(res.data.meta.current_page);
-        setLastPage(res.data.meta.last_page);
-        setPaginationData(res.data.meta);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const res = await api.get("/categories?per_page=100");
-      setCategories(res.data.data);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
 
   const openModal = (product = null) => {
     if (product) {
@@ -141,7 +149,7 @@ export default function Products() {
       data.append(key, value);
     });
     if (imageFile) data.append("image", imageFile);
-    if (editId) data.append("_method", "PUT"); // Laravel form method spoofing
+    if (editId) data.append("_method", "PUT");
 
     try {
       if (editId) {
@@ -311,9 +319,9 @@ export default function Products() {
           currentPage={currentPage}
           lastPage={lastPage}
           onPageChange={setCurrentPage}
-          totalItems={paginationData.total}
-          fromItem={paginationData.from}
-          toItem={paginationData.to}
+          totalItems={paginationData.total || 0}
+          fromItem={paginationData.from || 0}
+          toItem={paginationData.to || 0}
         />
       </div>
 

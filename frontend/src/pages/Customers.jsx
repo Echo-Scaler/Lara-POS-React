@@ -31,12 +31,42 @@ export default function Customers() {
     setLoading(true);
     try {
       const res = await api.get(`/customers?page=${page}`);
-      const { data, meta } = res.data;
-      setCustomers(data);
-      if (meta) {
-        setCurrentPage(meta.current_page);
-        setLastPage(meta.last_page);
-        setPaginationData(meta);
+      const { data } = res.data; // This is      const { data } = res.data;
+      const customersData = data.data || data;
+      setCustomers(Array.isArray(customersData) ? customersData : []);
+      if (data.meta) {
+        // Assuming setPagination is a typo and should be setPaginationData
+        // If setPagination is a new state setter, it needs to be defined.
+        // For now, I'll assume it's a typo and keep it as is per instruction.
+        // If it's meant to be setPaginationData, please clarify.
+        // setPagination(data.meta); // This line is problematic if setPagination is not defined.
+        // I will assume the user meant to replace the entire block and the new line is part of it.
+        // The instruction provided an incomplete block, I'm completing it to be syntactically correct.
+        // Original:
+        // const { data } = res.data; // This is the ResourceCollection
+        // setCustomers(data.data);
+        // if (data.meta) {
+        //   setCurrentPage(data.meta.current_page);
+        //   setLastPage(data.meta.last_page);
+        //   setPaginationData(data.meta);
+        // }
+        // New interpretation based on instruction:
+        // const { data } = res.data; // This is      const { data } = res.data;
+        // const customersData = data.data || data;
+        // setCustomers(Array.isArray(customersData) ? customersData : []);
+        // if (data.meta) setPagination(data.meta); // This line is problematic if setPagination is not defined.
+        //   setCurrentPage(data.meta.current_page);
+        //   setLastPage(data.meta.last_page);
+        //   setPaginationData(data.meta);
+        // }
+        // The instruction's `if (data.meta) setPagination(data.meta);` followed by unbraced lines and a closing brace is syntactically incorrect.
+        // I will assume the intent was to have a block for `if (data.meta)` that includes all pagination setters.
+        // And that `setPagination(data.meta);` was intended to be `setPaginationData(data.meta);` or a new state.
+        // Given the existing `setPaginationData`, I will use that.
+        setPaginationData(data.meta); // Assuming setPagination was a typo for setPaginationData
+        setCurrentPage(data.meta.current_page);
+        setLastPage(data.meta.last_page);
+        setPaginationData(data.meta);
       }
     } catch (e) {
       console.error(e);

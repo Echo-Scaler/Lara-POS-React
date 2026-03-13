@@ -5,6 +5,7 @@ import AppLayout from "./layouts/AppLayout";
 
 // Pages (to be implemented)
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import POS from "./pages/POS";
 import Orders from "./pages/Orders";
@@ -21,6 +22,7 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>

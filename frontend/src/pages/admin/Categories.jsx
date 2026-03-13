@@ -30,11 +30,13 @@ export default function Categories() {
     setLoading(true);
     try {
       const res = await api.get(`/categories?page=${page}`);
-      setCategories(res.data.data);
-      if (res.data.meta) {
-        setCurrentPage(res.data.meta.current_page);
-        setLastPage(res.data.meta.last_page);
-        setPaginationData(res.data.meta);
+      const { data } = res.data;
+      const categoriesData = data.data || data;
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      if (data.meta) {
+        setCurrentPage(data.meta.current_page);
+        setLastPage(data.meta.last_page);
+        setPaginationData(data.meta);
       }
     } catch (e) {
       console.error(e);

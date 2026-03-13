@@ -18,12 +18,18 @@ export default function Inventory() {
     setLoading(true);
     try {
       const res = await api.get(`/inventory?page=${page}`);
-      const paginator = res.data.data;
-      setMovements(paginator.data ? paginator.data : paginator);
-      if (paginator.current_page) {
-        setCurrentPage(paginator.current_page);
-        setLastPage(paginator.last_page);
-        setPaginationData(paginator);
+      // Handle both flat array response or nested data/meta structure
+      const responseData = res.data.data || res.data; // Get the main data object or array
+      setMovements(responseData.data || responseData || []); // Set movements from nested 'data' or directly from responseData
+      if (responseData.meta) {
+        setCurrentPage(responseData.meta.current_page);
+        setLastPage(responseData.meta.last_page);
+        setPaginationData(responseData.meta);
+      } else {
+        // If no meta, reset pagination data
+        setCurrentPage(1);
+        setLastPage(1);
+        setPaginationData({});
       }
     } catch (e) {
       console.error(e);

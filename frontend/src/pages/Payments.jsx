@@ -18,12 +18,12 @@ export default function Payments() {
     setLoading(true);
     try {
       const res = await api.get(`/payments?page=${page}`);
-      const paginator = res.data.data;
-      setPayments(paginator.data ? paginator.data : paginator);
-      if (paginator.current_page) {
-        setCurrentPage(paginator.current_page);
-        setLastPage(paginator.last_page);
-        setPaginationData(paginator);
+      const { data } = res.data; // ResourceCollection or direct data
+      setPayments(data.data || data || []); // Handle both nested 'data.data' and flat 'data'
+      if (data.meta) {
+        setCurrentPage(data.meta.current_page);
+        setLastPage(data.meta.last_page);
+        setPaginationData(data.meta);
       }
     } catch (e) {
       console.error(e);

@@ -56,7 +56,8 @@ export default function POS() {
   const fetchProducts = async () => {
     try {
       const res = await api.get("/products?active=1&per_page=100");
-      setProducts(res.data.data);
+      const { data } = res.data;
+      setProducts(data.data || data || []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -67,7 +68,8 @@ export default function POS() {
   const fetchCategories = async () => {
     try {
       const res = await api.get("/categories?active=1&per_page=100");
-      setCategories(res.data.data);
+      const { data } = res.data;
+      setCategories(data.data || data || []);
     } catch (e) {
       console.error(e);
     }

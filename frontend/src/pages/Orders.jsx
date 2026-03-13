@@ -54,11 +54,12 @@ export default function Orders() {
       if (filterTime) url += `&time=${filterTime}`;
 
       const res = await api.get(url);
-      setOrders(res.data.data);
-      if (res.data.meta) {
-        setCurrentPage(res.data.meta.current_page);
-        setLastPage(res.data.meta.last_page);
-        setPaginationData(res.data.meta);
+      const { data } = res.data;
+      setOrders(data.data || data || []);
+      if (data.meta) {
+        setCurrentPage(data.meta.current_page);
+        setLastPage(data.meta.last_page);
+        setPaginationData(data.meta);
       }
     } catch (e) {
       console.error(e);

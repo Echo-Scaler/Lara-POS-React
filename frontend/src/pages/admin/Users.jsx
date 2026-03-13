@@ -36,12 +36,13 @@ export default function Users() {
     setLoading(true);
     try {
       const res = await api.get(`/users?page=${page}`);
-      const paginator = res.data.data;
-      setUsers(paginator.data ? paginator.data : paginator);
-      if (paginator.current_page) {
-        setCurrentPage(paginator.current_page);
-        setLastPage(paginator.last_page);
-        setPaginationData(paginator);
+      const { data } = res.data; // This is the ResourceCollection
+      const usersData = data.data || data;
+      setUsers(Array.isArray(usersData) ? usersData : []);
+      if (data.meta) {
+        setCurrentPage(data.meta.current_page);
+        setLastPage(data.meta.last_page);
+        setPaginationData(data.meta);
       }
     } catch (e) {
       console.error(e);

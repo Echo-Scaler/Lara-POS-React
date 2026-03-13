@@ -16,7 +16,7 @@ class PaymentController extends Controller
     {
         $payments = Payment::with('order')->latest('paid_at')->paginate($request->get('per_page', 20));
 
-        return $this->successResponse($payments);
+        return $this->successResponse(PaymentResource::collection($payments), 'Payments retrieved successfully');
     }
 
     public function show(Payment $payment)

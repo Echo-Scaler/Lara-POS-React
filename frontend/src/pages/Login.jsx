@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 const Login = () => {
@@ -155,6 +155,18 @@ const Login = () => {
             >
               {isLoading ? "Signing in..." : "Sign in"}
             </button>
+          </div>
+
+          <div className="text-center mt-4">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <Link
+                to="/register"
+                className="font-semibold text-indigo-600 hover:text-indigo-700"
+              >
+                Sign up now
+              </Link>
+            </p>
           </div>
         </form>
         </div>

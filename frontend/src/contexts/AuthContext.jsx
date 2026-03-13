@@ -45,19 +45,42 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const register = async (name, email, password, password_confirmation) => {
+    try {
+      const response = await api.post("/register", {
+        name,
+        email,
+        password,
+        password_confirmation,
+      });
+      setToken(response.data.data.access_token);
+      setUser(response.data.data.user);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Registration failed",
+        errors: error.response?.data?.errors,
+      };
+    }
+  };
+
   const logout = async () => {
     try {
       await api.post("/logout");
-    } catch (error) {
-      console.error(error);
+    } catch (e) {
+      console.error("Logout failed", e);
     } finally {
       setToken(null);
       setUser(null);
+      localStorage.removeItem("token");
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, token, loading, login, logout, register }}
+    >
       {children}
     </AuthContext.Provider>
   );
