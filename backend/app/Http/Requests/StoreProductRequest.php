@@ -23,7 +23,7 @@ class StoreProductRequest extends FormRequest
             'discount' => 'numeric|min:0|max:100',
             'stock' => 'required|integer|min:0',
             'low_stock_threshold' => 'integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ];

@@ -16,11 +16,26 @@ trait ApiResponse
      */
     public function successResponse($data, $message = '', $code = 200)
     {
-        return response()->json([
+        $response = [
             'success' => true,
             'message' => $message,
             'data'    => $data
-        ], $code);
+        ];
+
+        // If data is a ResourceCollection, Laravel's toArray() might lose links/meta when nested
+        // We manually extract them if available
+        if ($data instanceof \Illuminate\Http\Resources\Json\ResourceCollection) {
+            $resourceResponse = $data->toResponse(request())->getData(true);
+            if (isset($resourceResponse['meta']) || isset($resourceResponse['links'])) {
+                $response['data'] = [
+                    'data'  => $resourceResponse['data'],
+                    'links' => $resourceResponse['links'] ?? null,
+                    'meta'  => $resourceResponse['meta'] ?? null,
+                ];
+            }
+        }
+
+        return response()->json($response, $code);
     }
 
     /**

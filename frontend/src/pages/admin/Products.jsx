@@ -126,7 +126,7 @@ export default function Products() {
         name: "",
         sku: "",
         barcode: "",
-        category_id: categories[0]?.id || "",
+        category_id: categories.length > 0 ? categories[0].id : "",
         price: "",
         cost_price: "",
         discount: "0",
@@ -148,25 +148,27 @@ export default function Products() {
       if (key === "is_active") value = value ? 1 : 0;
       data.append(key, value);
     });
-    if (imageFile) data.append("image", imageFile);
+    if (imageFile instanceof File) data.append("image", imageFile);
     if (editId) data.append("_method", "PUT");
 
     try {
       if (editId) {
-        await api.post(`/products/${editId}`, data, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await api.post(`/products/${editId}`, data);
       } else {
-        await api.post("/products", data, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await api.post("/products", data);
       }
       setShowModal(false);
       fetchProducts(currentPage);
     } catch (e) {
-      alert(
-        "Error saving product: " + (e.response?.data?.message || e.message),
-      );
+      let errorMsg = e.response?.data?.message || e.message;
+      if (e.response?.data?.errors) {
+        const errors = e.response.data.errors;
+        const detailErrors = Object.keys(errors)
+          .map((key) => `${key}: ${errors[key].join(", ")}`)
+          .join("\n");
+        errorMsg += "\n\n" + detailErrors;
+      }
+      alert("Error saving product: " + errorMsg);
     }
   };
 
