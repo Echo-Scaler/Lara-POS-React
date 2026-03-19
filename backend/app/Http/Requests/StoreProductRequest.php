@@ -28,4 +28,13 @@ class StoreProductRequest extends FormRequest
             'is_active' => 'boolean',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'image.file' => 'DEBUG: Field must be a file',
+            'image.image' => 'DEBUG: Field must be an image',
+            'image.mimes' => 'DEBUG: Allowed: jpeg, png, jpg, gif, webp',
+        ];
+    }
 }

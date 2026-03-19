@@ -27,7 +27,7 @@ class CategoryController extends Controller
         }
 
         $perPage = $request->get('per_page', 9);
-        $categories = $query->orderBy('name')->paginate($perPage);
+        $categories = $query->latest('id')->paginate($perPage);
 
         return $this->successResponse(CategoryResource::collection($categories), 'Categories retrieved successfully');
     }

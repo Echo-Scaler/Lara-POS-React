@@ -42,7 +42,7 @@ class ProductController extends Controller
         }
 
         $perPage = $request->get('per_page', 15);
-        $products = $query->latest()->paginate($perPage);
+        $products = $query->latest('id')->paginate($perPage);
 
         return $this->successResponse(ProductResource::collection($products), 'Products retrieved successfully');
     }

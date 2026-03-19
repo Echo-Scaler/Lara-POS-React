@@ -158,7 +158,13 @@ export default function Products() {
         await api.post("/products", data);
       }
       setShowModal(false);
-      fetchProducts(currentPage);
+      if (!editId) {
+        setSearchTerm("");
+        setCurrentPage(1);
+        setSearchTrigger((prev) => prev + 1);
+      } else {
+        fetchProducts(currentPage);
+      }
     } catch (e) {
       let errorMsg = e.response?.data?.message || e.message;
       if (e.response?.data?.errors) {
@@ -198,6 +204,7 @@ export default function Products() {
               <input
                 type="text"
                 placeholder="Search products..."
+                autoComplete="off"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out"

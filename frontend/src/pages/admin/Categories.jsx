@@ -89,7 +89,13 @@ export default function Categories() {
         await api.post("/categories", formData);
       }
       setShowModal(false);
-      fetchCategories(currentPage);
+      if (!editId) {
+        setSearchTerm("");
+        setCurrentPage(1);
+        setSearchTrigger((prev) => prev + 1);
+      } else {
+        fetchCategories(currentPage);
+      }
     } catch (e) {
       alert(
         "Error saving category: " + (e.response?.data?.message || e.message),
@@ -122,6 +128,7 @@ export default function Categories() {
               <input
                 type="text"
                 placeholder="Search categories..."
+                autoComplete="off"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out"
