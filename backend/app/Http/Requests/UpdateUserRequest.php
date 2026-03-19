@@ -21,6 +21,7 @@ class UpdateUserRequest extends FormRequest
             'email' => 'sometimes|email|max:255|unique:users,email,' . $userId,
             'password' => 'nullable|string|min:6',
             'role' => ['sometimes', Rule::in(['admin', 'manager', 'cashier'])],
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ];
     }
 }

@@ -8,6 +8,7 @@ import {
   ShieldCheckIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
+  PhotoIcon,
 } from "@heroicons/react/24/outline";
 
 const Profile = () => {
@@ -16,8 +17,18 @@ const Profile = () => {
     name: user?.name || "",
     password: "",
   });
+  const [avatar, setAvatar] = useState(null);
+  const [preview, setPreview] = useState(user?.avatar || null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatar(file);
+      setPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,14 +36,25 @@ const Profile = () => {
     setMessage({ type: "", text: "" });
 
     try {
-      const res = await api.put("/profile", formData);
-      const { data } = res.data;
+      const data = new FormData();
+      data.append("name", formData.name);
+      if (formData.password) data.append("password", formData.password);
+      if (avatar) data.append("avatar", avatar);
+      data.append("_method", "PUT"); // Laravel requirement for multipart PUT requests
+
+      const res = await api.post("/profile", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      const updatedUser = res.data.data;
       
-      // Update Auth context
-      setUser(data);
+      // Update local storage if needed (but we mostly use AuthContext)
+      setUser(updatedUser);
 
       setMessage({ type: "success", text: "Profile updated successfully!" });
       setFormData((prev) => ({ ...prev, password: "" }));
+      setAvatar(null);
     } catch (err) {
       console.error("Profile update error:", err.response?.data || err);
       setMessage({
@@ -64,8 +86,27 @@ const Profile = () => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-700" />
             
             <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-600 to-slate-800 mx-auto flex items-center justify-center text-white text-4xl font-black shadow-lg border-4 border-white">
-                {user?.name?.charAt(0).toUpperCase()}
+              <div className="relative w-24 h-24 mx-auto group/avatar">
+                {preview ? (
+                  <img
+                    src={preview}
+                    alt={user?.name}
+                    className="w-24 h-24 rounded-full object-cover shadow-lg border-4 border-white transition-transform group-hover/avatar:scale-105 duration-500"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-600 to-slate-800 flex items-center justify-center text-white text-4xl font-black shadow-lg border-4 border-white">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <label className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full shadow-md border border-slate-100 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors">
+                  <PhotoIcon className="h-4 w-4 text-slate-600" />
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                  />
+                </label>
               </div>
               <h2 className="mt-4 text-xl font-black text-slate-900 leading-tight">
                 {user?.name}

@@ -15,7 +15,8 @@ class UpdateProfileRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:3|max:255',
-            'password' => 'required|string|min:8|max:255',
+            'password' => 'nullable|string|min:8|max:255',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ];
     }
 }

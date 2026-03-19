@@ -10,6 +10,8 @@ use App\Http\Resources\UserResource;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -46,6 +48,10 @@ class UserController extends Controller
         $data = $request->validated();
         $data['password'] = Hash::make($data['password']);
 
+        if ($request->hasFile('avatar')) {
+            $data['avatar'] = $this->handleImageUpload($request->file('avatar'));
+        }
+
         $user = User::create($data);
 
         return $this->successResponse(new UserResource($user), 'User created successfully', 201);
@@ -57,8 +63,13 @@ class UserController extends Controller
 
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
-        } else {
-            unset($data['password']);
+        }
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $data['avatar'] = $this->handleImageUpload($request->file('avatar'));
         }
 
         $user->update($data);
@@ -66,17 +77,31 @@ class UserController extends Controller
         return $this->successResponse(new UserResource($user), 'User updated successfully');
     }
 
-    public function destroy(User $user, Request $request)
+    public function destroy(User $user)
     {
-        if (!$request->user()->hasRole(['admin', 'manager'])) {
-            return $this->errorResponse('Unauthorized', 403);
+        if ($user->id === auth()->id()) {
+            return $this->errorResponse('You cannot delete your own account', 422);
         }
 
-        if ($user->id === $request->user()->id) {
-            return $this->errorResponse('Cannot delete yourself', 422);
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
         }
 
         $user->delete();
+
         return $this->successResponse(null, 'User deleted successfully');
+    }
+
+    /**
+     * Handle Image Upload natively
+     */
+    private function handleImageUpload($file)
+    {
+        $filename = 'avatars/' . Str::random(40) . '.' . $file->getClientOriginalExtension();
+
+        // Save to public storage natively
+        Storage::disk('public')->put($filename, file_get_contents($file));
+
+        return $filename;
     }
 }

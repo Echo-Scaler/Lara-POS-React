@@ -19,6 +19,7 @@ class StoreUserRequest extends FormRequest
             'email' => 'required|email|max:255|unique:users',
             'password' => 'required|string|min:6',
             'role' => ['required', Rule::in(['admin', 'manager', 'cashier'])],
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ];
     }
 }

@@ -153,8 +153,18 @@ const Sidebar = () => {
 
       <div className="border-t p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-black">
-            {(user?.name || "U").slice(0, 1).toUpperCase()}
+          <div className="flex-shrink-0 w-10 h-10">
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user?.name}
+                className="w-10 h-10 rounded-full object-cover border-2 border-slate-50 shadow-sm"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-black shadow-sm">
+                {(user?.name || "U").slice(0, 1).toUpperCase()}
+              </div>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-extrabold text-gray-900 truncate">

@@ -11,6 +11,8 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\API\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -97,11 +99,36 @@ class AuthController extends Controller
     {
         $user = $request->user();
         
-        $user->update([
-            'name' => $request->name,
-            'password' => Hash::make($request->password),
-        ]);
+        $data = $request->validated();
+
+        if (isset($data['password']) && !empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']);
+        }
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $data['avatar'] = $this->handleImageUpload($request->file('avatar'));
+        }
+
+        $user->update($data);
 
         return $this->successResponse(new UserResource($user), 'Profile updated successfully');
+    }
+
+    /**
+     * Handle Image Upload natively
+     */
+    private function handleImageUpload($file)
+    {
+        $filename = 'avatars/' . Str::random(40) . '.' . $file->getClientOriginalExtension();
+
+        // Save to public storage natively
+        Storage::disk('public')->put($filename, file_get_contents($file));
+
+        return $filename;
     }
 }
