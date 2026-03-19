@@ -9,6 +9,7 @@ import {
   UsersIcon,
   TagIcon,
   ArrowRightOnRectangleIcon,
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 
 const Sidebar = () => {
@@ -164,6 +165,19 @@ const Sidebar = () => {
             </p>
           </div>
         </div>
+        <NavLink
+          to="/profile"
+          className={({ isActive }) =>
+            `mt-3 w-full inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-extrabold transition-all border ${
+              isActive
+                ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100"
+                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+            }`
+          }
+        >
+          <UserCircleIcon className="h-5 w-5" />
+          My Profile
+        </NavLink>
         <button
           onClick={handleLogout}
           className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-extrabold text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200"

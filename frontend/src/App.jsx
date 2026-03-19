@@ -15,6 +15,7 @@ import Products from "./pages/admin/Products";
 import Categories from "./pages/admin/Categories";
 import Users from "./pages/admin/Users";
 import Customers from "./pages/Customers";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
               <Route path="/pos" element={<POS />} />
               <Route path="/orders" element={<Orders />} />
               <Route path="/customers" element={<Customers />} />
+              <Route path="/profile" element={<Profile />} />
 
               <Route
                 element={<ProtectedRoute allowedRoles={["admin", "manager"]} />}

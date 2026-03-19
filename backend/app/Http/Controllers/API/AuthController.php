@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Traits\ApiResponse;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\API\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 
 class AuthController extends Controller
@@ -84,5 +85,23 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         return $this->successResponse(new UserResource($request->user()));
+    }
+
+    /**
+     * Update the authenticated user's profile.
+     *
+     * @param UpdateProfileRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateProfile(UpdateProfileRequest $request)
+    {
+        $user = $request->user();
+        
+        $user->update([
+            'name' => $request->name,
+            'password' => Hash::make($request->password),
+        ]);
+
+        return $this->successResponse(new UserResource($user), 'Profile updated successfully');
     }
 }
