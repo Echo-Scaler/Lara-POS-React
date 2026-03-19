@@ -36,7 +36,7 @@ class UserController extends Controller
             $query->where('role', $request->get('role'));
         }
 
-        $users = $query->paginate($request->get('per_page', 15));
+        $users = $query->paginate($request->get('per_page', 9));
 
         return $this->successResponse(UserResource::collection($users), 'Users retrieved successfully');
     }

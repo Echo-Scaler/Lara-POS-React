@@ -25,16 +25,6 @@ class StoreProductRequest extends FormRequest
             'low_stock_threshold' => 'integer|min:0',
             'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'description' => 'nullable|string',
-            'is_active' => 'boolean',
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'image.file' => 'DEBUG: Field must be a file',
-            'image.image' => 'DEBUG: Field must be an image',
-            'image.mimes' => 'DEBUG: Allowed: jpeg, png, jpg, gif, webp',
         ];
     }
 }

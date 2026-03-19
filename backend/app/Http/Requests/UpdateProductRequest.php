@@ -29,13 +29,4 @@ class UpdateProductRequest extends FormRequest
             'is_active' => 'boolean',
         ];
     }
-
-    public function messages(): array
-    {
-        return [
-            'image.file' => 'DEBUG EDIT: Field must be a file',
-            'image.image' => 'DEBUG EDIT: Field must be an image',
-            'image.mimes' => 'DEBUG EDIT: Allowed: jpeg, png, jpg, gif, webp',
-        ];
-    }
 }

@@ -89,7 +89,13 @@ export default function Users() {
         await api.post("/users", payload);
       }
       setShowModal(false);
-      fetchUsers(currentPage);
+      if (!editId) {
+        setQuery("");
+        setCurrentPage(1);
+        setSearchTrigger((prev) => prev + 1);
+      } else {
+        fetchUsers(currentPage);
+      }
     } catch (e) {
       console.error("User submission error:", e.response?.data || e);
       let errorMsg = e.response?.data?.message || e.message;
@@ -164,6 +170,7 @@ export default function Users() {
               </label>
               <div className="relative">
                 <input
+                  autoComplete="off"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search by name or email..."
@@ -359,7 +366,7 @@ export default function Users() {
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen">
               &#8203;
             </span>
-            <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-[0_20px_60px_-20px_rgba(0,0,0,0.45)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full opacity-100 border border-white/30">
+            <div className="relative inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-[0_20px_60px_-20px_rgba(0,0,0,0.45)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full opacity-100 border border-white/30 z-20">
               <div className="px-6 py-5 bg-gradient-to-br from-indigo-700 via-slate-800 to-gray-900">
                 <div className="text-white">
                   <div className="text-lg font-extrabold">
@@ -376,8 +383,8 @@ export default function Users() {
                 onSubmit={handleSubmit}
                 className="px-6 py-6 space-y-4 bg-gradient-to-b from-slate-50 to-white"
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="sm:col-span-1">
+                <div className="space-y-4">
+                  <div>
                     <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">
                       Name
                     </label>
@@ -388,12 +395,12 @@ export default function Users() {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 shadow-sm"
                     />
                   </div>
-                  <div className="sm:col-span-1">
+                  <div>
                     <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">
-                      Email
+                      Email address
                     </label>
                     <input
                       type="email"
@@ -402,12 +409,12 @@ export default function Users() {
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 shadow-sm"
                     />
                   </div>
-                  <div className="sm:col-span-1">
+                  <div>
                     <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">
-                      Role
+                      User Role
                     </label>
                     <select
                       required
@@ -415,22 +422,24 @@ export default function Users() {
                       onChange={(e) =>
                         setFormData({ ...formData, role: e.target.value })
                       }
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 shadow-sm"
                     >
                       <option value="cashier">Cashier</option>
                       <option value="manager">Manager</option>
                       <option value="admin">Admin</option>
                     </select>
                   </div>
-                  <div className="sm:col-span-1">
-                    <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">
-                      Password{" "}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+                        Password
+                      </label>
                       {editId && (
-                        <span className="text-slate-400 font-bold normal-case tracking-normal">
-                          (Leave blank to keep current)
+                        <span className="text-[10px] text-indigo-500 font-bold uppercase tracking-tight">
+                          Leave blank to keep current
                         </span>
                       )}
-                    </label>
+                    </div>
                     <input
                       type="password"
                       required={!editId}
@@ -439,7 +448,7 @@ export default function Users() {
                       onChange={(e) =>
                         setFormData({ ...formData, password: e.target.value })
                       }
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 shadow-sm"
                     />
                   </div>
                 </div>
