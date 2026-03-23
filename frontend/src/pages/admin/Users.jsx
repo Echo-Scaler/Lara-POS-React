@@ -15,6 +15,15 @@ import { usePaginatedFetch } from "../../hooks/usePaginatedFetch";
 
 const INITIAL_FORM = { name: "", email: "", password: "", role: "cashier", avatar: null };
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
+const FieldError = ({ errors, field }) =>
+  errors[field] ? (
+    <p className="mt-1.5 text-xs text-red-600 font-semibold">{errors[field][0]}</p>
+  ) : null;
+
+const inputErrClass = (errors, field) =>
+  errors[field] ? "border-red-400 bg-red-50 focus:border-red-500" : "border-slate-200";
+
 const ROLE_BADGE = {
   admin: "bg-rose-50 text-rose-700 border border-rose-100",
   manager: "bg-amber-50 text-amber-700 border border-amber-100",
@@ -41,8 +50,11 @@ export default function Users() {
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [preview, setPreview] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const openModal = (user = null) => {
+    setFieldErrors({});
     if (user) {
       setEditingUser(user);
       setFormData({ name: user.name, email: user.email, password: "", role: user.role, avatar: null });
@@ -63,8 +75,50 @@ export default function Users() {
     }
   };
 
+  const validate = () => {
+    const errs = {};
+    const name = formData.name.trim();
+    const email = formData.email.trim();
+    const password = formData.password;
+
+    if (!name) {
+      errs.name = ["Full name is required."];
+    } else if (name.length < 3) {
+      errs.name = ["Name must be at least 3 characters."];
+    } else if (name.length > 255) {
+      errs.name = ["Name must not exceed 255 characters."];
+    }
+
+    if (!email) {
+      errs.email = ["Email address is required."];
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errs.email = ["Please enter a valid email address."];
+    }
+
+    if (!editingUser && !password) {
+      errs.password = ["Password is required for new users."];
+    } else if (password && password.length < 8) {
+      errs.password = ["Password must be at least 8 characters."];
+    }
+
+    if (!["admin", "manager", "cashier"].includes(formData.role)) {
+      errs.role = ["Please select a valid role."];
+    }
+
+    return errs;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const clientErrors = validate();
+    if (Object.keys(clientErrors).length > 0) {
+      setFieldErrors(clientErrors);
+      return;
+    }
+
+    setSaving(true);
+    setFieldErrors({});
     try {
       const body = new FormData();
       body.append("name", formData.name);
@@ -76,16 +130,22 @@ export default function Users() {
       if (editingUser) {
         body.append("_method", "PUT");
         await api.post(`/users/${editingUser.id}`, body);
-        alert("User updated successfully");
       } else {
         await api.post("/users", body);
-        alert("User created successfully");
       }
 
       setModalOpen(false);
+      setFieldErrors({});
       refresh();
     } catch (err) {
-      alert(err.response?.data?.message || "Error saving user");
+      const serverErrors = err.response?.data?.errors;
+      if (serverErrors) {
+        setFieldErrors(serverErrors);
+      } else {
+        setFieldErrors({ name: [err.response?.data?.message || "Error saving user"] });
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -317,9 +377,10 @@ export default function Users() {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                      className={`block w-full px-4 py-3 bg-slate-50 border rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${inputErrClass(fieldErrors, "name")}`}
                       placeholder="e.g. John Doe"
                     />
+                    <FieldError errors={fieldErrors} field="name" />
                   </div>
 
                   {/* Email */}
@@ -332,9 +393,10 @@ export default function Users() {
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                      className={`block w-full px-4 py-3 bg-slate-50 border rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${inputErrClass(fieldErrors, "email")}`}
                       placeholder="johndoe@example.com"
                     />
+                    <FieldError errors={fieldErrors} field="email" />
                   </div>
 
                   {/* Password + Role */}
@@ -355,9 +417,10 @@ export default function Users() {
                         required={!editingUser}
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                        className={`block w-full px-4 py-3 bg-slate-50 border rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${inputErrClass(fieldErrors, "password")}`}
                         placeholder="••••••••"
                       />
+                      <FieldError errors={fieldErrors} field="password" />
                     </div>
                     <div>
                       <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-widest mb-2">
@@ -393,9 +456,10 @@ export default function Users() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-4 bg-indigo-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-indigo-200 hover:bg-slate-900 hover:shadow-slate-400 transition-all active:scale-95"
+                    disabled={saving}
+                    className="flex-1 px-4 py-4 bg-indigo-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-indigo-200 hover:bg-slate-900 hover:shadow-slate-400 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {editingUser ? "Sync Record" : "Grant Access"}
+                    {saving ? "Saving…" : editingUser ? "Sync Record" : "Grant Access"}
                   </button>
                 </div>
               </form>

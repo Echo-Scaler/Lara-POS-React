@@ -109,6 +109,8 @@ class AuthController extends Controller
 
         if ($request->hasFile('avatar')) {
             $data['avatar'] = $this->replaceImage($request->file('avatar'), $user->avatar, 'avatars');
+        } else {
+            unset($data['avatar']); // Don't overwrite existing avatar with null
         }
 
         $user->update($data);

@@ -67,15 +67,59 @@ export default function Customers() {
 
   const buildPayload = () => {
     // Strip empty optional fields so unique rules aren't applied to blank strings
-    const payload = { name: formData.name };
+    const payload = { name: formData.name.trim() };
     if (formData.email.trim()) payload.email = formData.email.trim();
     if (formData.phone.trim()) payload.phone = formData.phone.trim();
     if (formData.address.trim()) payload.address = formData.address.trim();
     return payload;
   };
 
+  const validate = () => {
+    const errs = {};
+    const name = formData.name.trim();
+    const email = formData.email.trim();
+    const phone = formData.phone.trim();
+    const address = formData.address.trim();
+
+    if (!name) {
+      errs.name = ["Name is required."];
+    } else if (name.length < 2) {
+      errs.name = ["Name must be at least 2 characters."];
+    } else if (name.length > 255) {
+      errs.name = ["Name must not exceed 255 characters."];
+    }
+
+    if (email) {
+      const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRx.test(email)) {
+        errs.email = ["Please enter a valid email address."];
+      }
+    }
+
+    if (phone) {
+      const phoneRx = /^[\d\s+\-().]{7,20}$/;
+      if (!phoneRx.test(phone)) {
+        errs.phone = ["Phone must be 7–20 characters (digits, +, -, spaces only)."];
+      }
+    }
+
+    if (address && address.length > 500) {
+      errs.address = ["Address must not exceed 500 characters."];
+    }
+
+    return errs;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Client-side validation before hitting the server
+    const clientErrors = validate();
+    if (Object.keys(clientErrors).length > 0) {
+      setFieldErrors(clientErrors);
+      return;
+    }
+
     setSaving(true);
     setFieldErrors({});
     try {

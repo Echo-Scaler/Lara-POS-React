@@ -11,6 +11,8 @@ import {
 } from "@heroicons/react/24/outline";
 import Pagination from "../../components/Pagination";
 
+// ─── Helpers ──────────────────────────────────────────
+
 export default function Products() {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -42,6 +44,16 @@ export default function Products() {
 
   const [editId, setEditId] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const FieldError = ({ field }) =>
+    fieldErrors[field] ? (
+      <p className="mt-1 text-xs text-red-600 font-semibold">{fieldErrors[field][0]}</p>
+    ) : null;
+
+  const inputErrClass = (field) =>
+    fieldErrors[field] ? "border-red-400 bg-red-50" : "border-gray-300";
 
   const fetchProducts = async (page = 1) => {
     setLoading(true);
@@ -136,12 +148,83 @@ export default function Products() {
         is_active: true,
       });
     }
+    setFieldErrors({});
     setImageFile(null);
     setShowModal(true);
   };
 
+  const validate = () => {
+    const errs = {};
+    const name = String(formData.name).trim();
+    const sku = String(formData.sku).trim();
+    const price = parseFloat(formData.price);
+    const costPrice = parseFloat(formData.cost_price);
+    const stock = parseInt(formData.stock, 10);
+    const threshold = parseInt(formData.low_stock_threshold, 10);
+    const discount = parseFloat(formData.discount ?? 0);
+
+    if (!name) {
+      errs.name = ["Product name is required."];
+    } else if (name.length < 2) {
+      errs.name = ["Name must be at least 2 characters."];
+    } else if (name.length > 255) {
+      errs.name = ["Name must not exceed 255 characters."];
+    }
+
+    if (!formData.category_id) {
+      errs.category_id = ["Please select a category."];
+    }
+
+    if (!sku) {
+      errs.sku = ["SKU is required."];
+    } else if (!/^[a-zA-Z0-9\-_]+$/.test(sku)) {
+      errs.sku = ["SKU may only contain letters, numbers, hyphens, and underscores."];
+    }
+
+    if (formData.price === "" || isNaN(price)) {
+      errs.price = ["Selling price is required."];
+    } else if (price <= 0) {
+      errs.price = ["Selling price must be greater than 0."];
+    }
+
+    if (formData.cost_price === "" || isNaN(costPrice)) {
+      errs.cost_price = ["Cost price is required."];
+    } else if (costPrice < 0) {
+      errs.cost_price = ["Cost price cannot be negative."];
+    } else if (!isNaN(price) && price < costPrice) {
+      errs.price = ["Selling price should not be less than cost price."];
+    }
+
+    if (formData.stock === "" || isNaN(stock)) {
+      errs.stock = ["Stock quantity is required."];
+    } else if (stock < 0) {
+      errs.stock = ["Stock cannot be negative."];
+    }
+
+    if (formData.low_stock_threshold === "" || isNaN(threshold)) {
+      errs.low_stock_threshold = ["Low stock threshold is required."];
+    } else if (threshold < 0) {
+      errs.low_stock_threshold = ["Threshold cannot be negative."];
+    }
+
+    if (!isNaN(discount) && (discount < 0 || discount > 100)) {
+      errs.discount = ["Discount must be between 0 and 100."];
+    }
+
+    return errs;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const clientErrors = validate();
+    if (Object.keys(clientErrors).length > 0) {
+      setFieldErrors(clientErrors);
+      return;
+    }
+
+    setSaving(true);
+    setFieldErrors({});
     const data = new FormData();
     Object.keys(formData).forEach((key) => {
       let value = formData[key];
@@ -158,6 +241,7 @@ export default function Products() {
         await api.post("/products", data);
       }
       setShowModal(false);
+      setFieldErrors({});
       if (!editId) {
         setSearchTerm("");
         setCurrentPage(1);
@@ -166,15 +250,14 @@ export default function Products() {
         fetchProducts(currentPage);
       }
     } catch (e) {
-      let errorMsg = e.response?.data?.message || e.message;
-      if (e.response?.data?.errors) {
-        const errors = e.response.data.errors;
-        const detailErrors = Object.keys(errors)
-          .map((key) => `${key}: ${errors[key].join(", ")}`)
-          .join("\n");
-        errorMsg += "\n\n" + detailErrors;
+      const serverErrors = e.response?.data?.errors;
+      if (serverErrors) {
+        setFieldErrors(serverErrors);
+      } else {
+        setFieldErrors({ name: [e.response?.data?.message || "Error saving product"] });
       }
-      alert("Error saving product: " + errorMsg);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -358,32 +441,26 @@ export default function Products() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2 sm:col-span-1">
                     <label className="block text-sm font-medium text-gray-700">
-                      Product Name
+                      Product Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${inputErrClass("name")}`}
                     />
+                    <FieldError field="name" />
                   </div>
                   <div className="col-span-2 sm:col-span-1">
                     <label className="block text-sm font-medium text-gray-700">
-                      Category
+                      Category <span className="text-red-500">*</span>
                     </label>
                     <select
                       required
                       value={formData.category_id}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          category_id: e.target.value,
-                        })
-                      }
-                      className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                      className={`mt-1 block w-full bg-white border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${inputErrClass("category_id")}`}
                     >
                       <option value="">Select Category</option>
                       {categories.map((c) => (
@@ -392,21 +469,21 @@ export default function Products() {
                         </option>
                       ))}
                     </select>
+                    <FieldError field="category_id" />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      SKU
+                      SKU <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       value={formData.sku}
-                      onChange={(e) =>
-                        setFormData({ ...formData, sku: e.target.value })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                      className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${inputErrClass("sku")}`}
                     />
+                    <FieldError field="sku" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
@@ -415,74 +492,65 @@ export default function Products() {
                     <input
                       type="text"
                       value={formData.barcode}
-                      onChange={(e) =>
-                        setFormData({ ...formData, barcode: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Selling Price ($)
+                      Selling Price ($) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       step="0.01"
                       required
                       value={formData.price}
-                      onChange={(e) =>
-                        setFormData({ ...formData, price: e.target.value })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${inputErrClass("price")}`}
                     />
+                    <FieldError field="price" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Cost Price ($)
+                      Cost Price ($) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       step="0.01"
                       required
                       value={formData.cost_price}
-                      onChange={(e) =>
-                        setFormData({ ...formData, cost_price: e.target.value })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
+                      className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${inputErrClass("cost_price")}`}
                     />
+                    <FieldError field="cost_price" />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Stock Quantity
+                      Stock Quantity <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       required
                       value={formData.stock}
-                      onChange={(e) =>
-                        setFormData({ ...formData, stock: e.target.value })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                      className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${inputErrClass("stock")}`}
                     />
+                    <FieldError field="stock" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Low Stock Threshold
+                      Low Stock Threshold <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       required
                       value={formData.low_stock_threshold}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          low_stock_threshold: e.target.value,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      onChange={(e) => setFormData({ ...formData, low_stock_threshold: e.target.value })}
+                      className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${inputErrClass("low_stock_threshold")}`}
                     />
+                    <FieldError field="low_stock_threshold" />
                   </div>
 
                   <div>
@@ -494,11 +562,10 @@ export default function Products() {
                       step="0.01"
                       max="100"
                       value={formData.discount}
-                      onChange={(e) =>
-                        setFormData({ ...formData, discount: e.target.value })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
+                      className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${inputErrClass("discount")}`}
                     />
+                    <FieldError field="discount" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
@@ -550,9 +617,10 @@ export default function Products() {
                 <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                   <button
                     type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:col-start-2 sm:text-sm border-gray-100"
+                    disabled={saving}
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:col-start-2 sm:text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {editId ? "Save Changes" : "Add Product"}
+                    {saving ? "Saving…" : editId ? "Save Changes" : "Add Product"}
                   </button>
                   <button
                     type="button"
