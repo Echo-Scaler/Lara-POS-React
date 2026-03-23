@@ -15,12 +15,14 @@ import { StarIcon as StarSolidIcon } from "@heroicons/react/24/solid";
 export default function POS() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [loading, setLoading] = useState(true);
 
   const [cart, setCart] = useState([]);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [amountPaid, setAmountPaid] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,6 +51,7 @@ export default function POS() {
   useEffect(() => {
     fetchProducts();
     fetchCategories();
+    fetchCustomers();
     // Check if there's a held order on mount
     setHasHeldOrder(!!localStorage.getItem("held_order"));
   }, []);
@@ -70,6 +73,16 @@ export default function POS() {
       const res = await api.get("/categories?active=1&per_page=100");
       const { data } = res.data;
       setCategories(data.data || data || []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      const res = await api.get("/customers?per_page=200");
+      const { data } = res.data;
+      setCustomers(data.data || data || []);
     } catch (e) {
       console.error(e);
     }
@@ -263,6 +276,7 @@ export default function POS() {
         payment_method: paymentMethod,
         amount_paid: computedAmount,
         installments: paymentMethod === "card" ? cardInstallments : null,
+        customer_id: selectedCustomerId ? parseInt(selectedCustomerId) : null,
         items: cart.map((i) => ({
           product_id: i.product_id,
           quantity: i.quantity,
@@ -294,6 +308,7 @@ export default function POS() {
       setShowCheckout(false);
       setAmountPaid("");
       setCardInstallments(null);
+      setSelectedCustomerId("");
       setSearch("");
       setSelectedCategory("");
       fetchProducts(); // Refresh stock
@@ -637,6 +652,28 @@ export default function POS() {
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Customer Selection */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                        Customer
+                      </span>
+                      <span className="text-xs font-bold text-slate-400">Optional</span>
+                    </div>
+                    <select
+                      value={selectedCustomerId}
+                      onChange={(e) => setSelectedCustomerId(e.target.value)}
+                      className="w-full py-2.5 px-3 rounded-2xl border-2 border-slate-200 bg-slate-50 text-sm font-semibold text-gray-900 focus:border-indigo-500 focus:bg-white transition-colors"
+                    >
+                      <option value="">Walk-in Customer</option>
+                      {customers.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}{c.phone ? ` — ${c.phone}` : ""}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="space-y-4">

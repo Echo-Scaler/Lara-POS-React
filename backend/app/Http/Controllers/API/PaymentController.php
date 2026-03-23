@@ -14,7 +14,13 @@ class PaymentController extends Controller
 
     public function index(Request $request)
     {
-        $payments = Payment::with('order')->latest('paid_at')->paginate($request->get('per_page', 20));
+        $query = Payment::with('order')->latest('paid_at');
+
+        if ($request->filled('method')) {
+            $query->where('method', $request->get('method'));
+        }
+
+        $payments = $query->paginate($request->get('per_page', 20));
 
         return $this->successResponse(PaymentResource::collection($payments), 'Payments retrieved successfully');
     }

@@ -66,7 +66,7 @@ const Dashboard = () => {
   }
 
   // Reverse the sales chart array for Recharts to plot chronologically
-  const chartData = stats?.sales_chart ? [...stats.sales_chart].reverse() : [];
+  const chartData = stats?.sales_chart ?? [];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
