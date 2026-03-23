@@ -7,16 +7,16 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Traits\ApiResponse;
+use App\Traits\HandlesImageUpload;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\API\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, HandlesImageUpload;
 
     /**
      * Handle user registration.
@@ -108,10 +108,7 @@ class AuthController extends Controller
         }
 
         if ($request->hasFile('avatar')) {
-            if ($user->avatar) {
-                Storage::disk('public')->delete($user->avatar);
-            }
-            $data['avatar'] = $this->handleImageUpload($request->file('avatar'));
+            $data['avatar'] = $this->replaceImage($request->file('avatar'), $user->avatar, 'avatars');
         }
 
         $user->update($data);
@@ -119,16 +116,4 @@ class AuthController extends Controller
         return $this->successResponse(new UserResource($user), 'Profile updated successfully');
     }
 
-    /**
-     * Handle Image Upload natively
-     */
-    private function handleImageUpload($file)
-    {
-        $filename = 'avatars/' . Str::random(40) . '.' . $file->getClientOriginalExtension();
-
-        // Save to public storage natively
-        Storage::disk('public')->put($filename, file_get_contents($file));
-
-        return $filename;
-    }
 }

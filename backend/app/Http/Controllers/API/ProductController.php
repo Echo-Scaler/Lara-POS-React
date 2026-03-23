@@ -8,13 +8,13 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Traits\ApiResponse;
+use App\Traits\HandlesImageUpload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, HandlesImageUpload;
 
     public function index(Request $request)
     {
@@ -52,7 +52,7 @@ class ProductController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
-            $data['image'] = $this->handleImageUpload($request->file('image'));
+            $data['image'] = $this->uploadImage($request->file('image'), 'products');
         }
 
         $product = Product::create($data);
@@ -72,10 +72,7 @@ class ProductController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
-            if ($product->image) {
-                Storage::disk('public')->delete($product->image);
-            }
-            $data['image'] = $this->handleImageUpload($request->file('image'));
+            $data['image'] = $this->replaceImage($request->file('image'), $product->image, 'products');
         }
 
         $product->update($data);
@@ -99,16 +96,4 @@ class ProductController extends Controller
         return $this->successResponse(null, 'Product deleted successfully');
     }
 
-    /**
-     * Handle Image Upload natively
-     */
-    private function handleImageUpload($file)
-    {
-        $filename = 'products/' . Str::random(40) . '.' . $file->getClientOriginalExtension();
-
-        // Save to public storage natively
-        Storage::disk('public')->put($filename, file_get_contents($file));
-
-        return $filename;
-    }
 }

@@ -8,21 +8,20 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Traits\ApiResponse;
+use App\Traits\HandlesImageUpload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, HandlesImageUpload;
 
     public function index(Request $request)
     {
-        // Role check remains for index since it doesn't use a FormRequest for data fetching
-        if (!$request->user()->hasRole(['admin', 'manager'])) {
-            return $this->errorResponse('Unauthorized', 403);
-        }
+        // Authorization is handled by the StoreUserRequest/UpdateUserRequest FormRequests
+        // for mutations. For index, we rely on route-level middleware or a simple check.
+        abort_unless($request->user()->hasRole(['admin', 'manager']), 403, 'Unauthorized');
 
         $query = User::latest('id');
 
@@ -49,7 +48,7 @@ class UserController extends Controller
         $data['password'] = Hash::make($data['password']);
 
         if ($request->hasFile('avatar')) {
-            $data['avatar'] = $this->handleImageUpload($request->file('avatar'));
+            $data['avatar'] = $this->uploadImage($request->file('avatar'), 'avatars');
         }
 
         $user = User::create($data);
@@ -61,15 +60,14 @@ class UserController extends Controller
     {
         $data = $request->validated();
 
-        if (isset($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        } else {
+            unset($data['password']);
         }
 
         if ($request->hasFile('avatar')) {
-            if ($user->avatar) {
-                Storage::disk('public')->delete($user->avatar);
-            }
-            $data['avatar'] = $this->handleImageUpload($request->file('avatar'));
+            $data['avatar'] = $this->replaceImage($request->file('avatar'), $user->avatar, 'avatars');
         }
 
         $user->update($data);
@@ -90,18 +88,5 @@ class UserController extends Controller
         $user->delete();
 
         return $this->successResponse(null, 'User deleted successfully');
-    }
-
-    /**
-     * Handle Image Upload natively
-     */
-    private function handleImageUpload($file)
-    {
-        $filename = 'avatars/' . Str::random(40) . '.' . $file->getClientOriginalExtension();
-
-        // Save to public storage natively
-        Storage::disk('public')->put($filename, file_get_contents($file));
-
-        return $filename;
     }
 }

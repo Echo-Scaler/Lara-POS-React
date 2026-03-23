@@ -1,62 +1,33 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import api from "../services/api";
 import {
   PlusIcon,
   TrashIcon,
   PencilIcon,
   UserGroupIcon,
-  MagnifyingGlassIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import Pagination from "../components/Pagination";
+import SearchBar from "../components/SearchBar";
+import { usePaginatedFetch } from "../hooks/usePaginatedFetch";
+
+const EMPTY_FORM = { name: "", email: "", phone: "", address: "" };
 
 export default function Customers() {
-  const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    items: customers,
+    loading,
+    pagination,
+    searchTerm,
+    setSearchTerm,
+    setPage,
+    handleSearch,
+    handleClear,
+    refresh,
+  } = usePaginatedFetch("/customers");
+
   const [showModal, setShowModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [lastPage, setLastPage] = useState(1);
-  const [paginationData, setPaginationData] = useState({});
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchTrigger, setSearchTrigger] = useState(0);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
   const [editId, setEditId] = useState(null);
-
-  useEffect(() => {
-    fetchCustomers(currentPage);
-  }, [currentPage, searchTrigger]);
-
-  const fetchCustomers = async (page = 1) => {
-    setLoading(true);
-    try {
-      let url = `/customers?page=${page}`;
-      if (searchTerm) {
-        url += `&search=${encodeURIComponent(searchTerm)}`;
-      }
-      const res = await api.get(url);
-      const responseData = res.data.data; // This is the ResourceCollection wrapped in successResponse
-      
-      if (responseData.data) {
-        setCustomers(responseData.data);
-        if (responseData.meta) {
-          setPaginationData(responseData.meta);
-          setCurrentPage(responseData.meta.current_page);
-          setLastPage(responseData.meta.last_page);
-        }
-      } else {
-        setCustomers(Array.isArray(responseData) ? responseData : []);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const openModal = (customer = null) => {
     if (customer) {
@@ -69,40 +40,23 @@ export default function Customers() {
       });
     } else {
       setEditId(null);
-      setFormData({ name: "", email: "", phone: "", address: "" });
+      setFormData(EMPTY_FORM);
     }
     setShowModal(true);
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    setCurrentPage(1);
-    setSearchTrigger((prev) => prev + 1);
-  };
-
-  const handleClear = () => {
-    setSearchTerm("");
-    setCurrentPage(1);
-    setSearchTrigger((prev) => prev + 1);
-  };
-
   const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
-    console.log("Submitting customer form...", { editId, formData });
+    e.preventDefault();
     try {
-      let response;
       if (editId) {
-        response = await api.put(`/customers/${editId}`, formData);
+        await api.put(`/customers/${editId}`, formData);
       } else {
-        response = await api.post("/customers", formData);
+        await api.post("/customers", formData);
       }
-      console.log("Customer saved successfully:", response.data);
       setShowModal(false);
-      fetchCustomers(currentPage);
-    } catch (e) {
-      console.error("Customer submission error details:", e);
-      const errorMessage = e.response?.data?.message || e.message;
-      alert("Error saving customer:\n" + errorMessage);
+      refresh();
+    } catch (err) {
+      alert("Error saving customer: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -110,101 +64,68 @@ export default function Customers() {
     if (!confirm("Are you sure you want to delete this customer?")) return;
     try {
       await api.delete(`/customers/${id}`);
-      fetchCustomers(currentPage);
-    } catch (e) {
-      alert("Cannot delete: " + (e.response?.data?.message || e.message));
+      refresh();
+    } catch (err) {
+      alert("Cannot delete: " + (err.response?.data?.message || err.message));
     }
   };
 
   if (loading && customers.length === 0)
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
       </div>
     );
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Manage your customer database and viewing their contact information.
+            Manage your customer database and their contact information.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <form
-            onSubmit={handleSearch}
-            className="relative flex items-center gap-3"
-          >
-            <div className="relative flex-1 sm:w-64">
-              <input
-                type="text"
-                placeholder="Search customers..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MagnifyingGlassIcon
-                  className="h-5 w-5 text-gray-400"
-                  aria-hidden="true"
-                />
-              </div>
-              {searchTerm && (
-                <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
-                  <button
-                    type="button"
-                    onClick={handleClear}
-                    className="p-1 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none"
-                  >
-                    <XMarkIcon className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </div>
-              )}
-            </div>
+          <form onSubmit={handleSearch} className="relative flex items-center gap-3">
+            <SearchBar
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onClear={handleClear}
+              placeholder="Search customers..."
+            />
             <button
               type="submit"
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+              className="inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
             >
               Search
             </button>
           </form>
           <button
             onClick={() => openModal()}
-            className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+            className="inline-flex items-center justify-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
           >
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" /> Add Customer
           </button>
         </div>
       </div>
 
+      {/* Table */}
       <div className="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden flex flex-col">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Customer Name
-                </th>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Contact Info
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Address
-                </th>
-                <th scope="col" className="relative px-6 py-3">
-                  <span className="sr-only">Actions</span>
-                </th>
+                {["Customer Name", "Contact Info", "Address", ""].map((h) => (
+                  <th
+                    key={h}
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -218,12 +139,8 @@ export default function Customers() {
                         </span>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-semibold text-gray-900">
-                          {customer.name}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          ID: #{customer.id}
-                        </div>
+                        <div className="text-sm font-semibold text-gray-900">{customer.name}</div>
+                        <div className="text-xs text-gray-500">ID: #{customer.id}</div>
                       </div>
                     </div>
                   </td>
@@ -259,126 +176,84 @@ export default function Customers() {
             </tbody>
           </table>
         </div>
+
         {customers.length === 0 && !loading && (
           <div className="px-6 py-12 text-center text-gray-500 bg-gray-50 flex flex-col items-center">
             <UserGroupIcon className="mx-auto h-12 w-12 text-gray-300 mb-3" />
             <p>No customers found.</p>
           </div>
         )}
+
         <Pagination
-          currentPage={currentPage}
-          lastPage={lastPage}
-          onPageChange={setCurrentPage}
-          totalItems={paginationData.total || 0}
-          fromItem={paginationData.from || 0}
-          toItem={paginationData.to || 0}
+          currentPage={pagination.currentPage}
+          lastPage={pagination.lastPage}
+          onPageChange={setPage}
+          totalItems={pagination.total}
+          fromItem={pagination.from}
+          toItem={pagination.to}
         />
       </div>
 
+      {/* Modal */}
       {showModal && (
-        <div
-          className="fixed inset-0 z-10 overflow-y-auto"
-          aria-labelledby="modal-title"
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className="fixed inset-0 z-10 overflow-y-auto" role="dialog" aria-modal="true">
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div
-              className="fixed inset-0 bg-blue-100 bg-opacity-75 transition-opacity opacity-100"
-              aria-hidden="true"
+              className="fixed inset-0 bg-slate-900/50 transition-opacity"
               onClick={() => setShowModal(false)}
-            ></div>
-            <span
-              className="hidden sm:inline-block sm:align-middle sm:h-screen"
-              aria-hidden="true"
-            >
-              &#8203;
-            </span>
-            <div className="inline-block align-bottom bg-white rounded-2xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-8 opacity-100 translate-y-0 sm:scale-100 border border-gray-100">
-              <form
-                id="customer-form"
-                onSubmit={handleSubmit}
-                className="space-y-4"
-              >
-                <h3
-                  className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2"
-                  id="modal-title"
-                >
+            />
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div className="inline-block align-bottom bg-white rounded-2xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-8 border border-gray-100">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2" id="modal-title">
                   <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
                     <UserGroupIcon className="h-6 w-6" />
                   </div>
                   {editId ? "Edit Customer" : "Add New Customer"}
                 </h3>
+
+                {[
+                  { label: "Name", key: "name", type: "text", required: true },
+                  { label: "Email", key: "email", type: "email" },
+                  { label: "Phone", key: "phone", type: "text" },
+                ].map(({ label, key, type, required }) => (
+                  <div key={key}>
+                    <label className="block text-sm font-medium text-gray-700">{label}</label>
+                    <input
+                      type={type}
+                      required={required}
+                      value={formData[key]}
+                      onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    />
+                  </div>
+                ))}
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Name
-                  </label>
-                  <input
-                    id="customer-name-input"
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Phone
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Address
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Address</label>
                   <textarea
                     rows="2"
                     value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
                 </div>
-                  <div className="mt-8 sm:flex sm:flex-row-reverse gap-3">
-                    <button
-                      id="customer-submit-button"
-                      type="submit"
-                      className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-6 py-2.5 bg-indigo-600 text-base font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto sm:text-sm transition-all shadow-indigo-200"
-                    >
-                      {editId ? "Save Changes" : "Create Customer"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowModal(false)}
-                      className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-6 py-2.5 bg-white text-base font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 sm:mt-0 sm:w-auto sm:text-sm transition-all"
-                    >
-                      Cancel
-                    </button>
-                  </div>
+
+                <div className="mt-8 sm:flex sm:flex-row-reverse gap-3">
+                  <button
+                    type="submit"
+                    className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-6 py-2.5 bg-indigo-600 text-base font-semibold text-white hover:bg-indigo-700 sm:w-auto sm:text-sm transition-all"
+                  >
+                    {editId ? "Save Changes" : "Create Customer"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-6 py-2.5 bg-white text-base font-semibold text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto sm:text-sm transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </form>
             </div>
           </div>

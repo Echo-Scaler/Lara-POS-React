@@ -1,57 +1,34 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import api from "../../services/api";
 import {
   PlusIcon,
   TrashIcon,
   PencilIcon,
   CubeIcon,
-  MagnifyingGlassIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import Pagination from "../../components/Pagination";
+import SearchBar from "../../components/SearchBar";
+import { usePaginatedFetch } from "../../hooks/usePaginatedFetch";
+
+const EMPTY_FORM = { name: "", description: "", is_active: true };
 
 export default function Categories() {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    items: categories,
+    loading,
+    pagination,
+    searchTerm,
+    setSearchTerm,
+    setPage,
+    handleSearch,
+    handleClear,
+    refresh,
+  } = usePaginatedFetch("/categories");
+
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    is_active: true,
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
   const [editId, setEditId] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [lastPage, setLastPage] = useState(1);
-  const [paginationData, setPaginationData] = useState({});
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchTrigger, setSearchTrigger] = useState(0);
-
-  useEffect(() => {
-    fetchCategories(currentPage);
-  }, [currentPage, searchTrigger]);
-
-  const fetchCategories = async (page = 1) => {
-    setLoading(true);
-    try {
-      let url = `/categories?page=${page}`;
-      if (searchTerm) {
-        url += `&search=${encodeURIComponent(searchTerm)}`;
-      }
-      const res = await api.get(url);
-      const { data } = res.data;
-      const categoriesData = data.data || data;
-      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-      if (data.meta) {
-        setCurrentPage(data.meta.current_page);
-        setLastPage(data.meta.last_page);
-        setPaginationData(data.meta);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const openModal = (category = null) => {
     if (category) {
@@ -63,25 +40,13 @@ export default function Categories() {
       });
     } else {
       setEditId(null);
-      setFormData({ name: "", description: "", is_active: true });
+      setFormData(EMPTY_FORM);
     }
     setShowModal(true);
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    setCurrentPage(1);
-    setSearchTrigger((prev) => prev + 1);
-  };
-
-  const handleClear = () => {
-    setSearchTerm("");
-    setCurrentPage(1);
-    setSearchTrigger((prev) => prev + 1);
-  };
-
   const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
+    e.preventDefault();
     try {
       if (editId) {
         await api.put(`/categories/${editId}`, formData);
@@ -89,17 +54,9 @@ export default function Categories() {
         await api.post("/categories", formData);
       }
       setShowModal(false);
-      if (!editId) {
-        setSearchTerm("");
-        setCurrentPage(1);
-        setSearchTrigger((prev) => prev + 1);
-      } else {
-        fetchCategories(currentPage);
-      }
-    } catch (e) {
-      alert(
-        "Error saving category: " + (e.response?.data?.message || e.message),
-      );
+      refresh();
+    } catch (err) {
+      alert("Error saving category: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -107,53 +64,32 @@ export default function Categories() {
     if (!confirm("Are you sure?")) return;
     try {
       await api.delete(`/categories/${id}`);
-      fetchCategories(currentPage);
-    } catch (e) {
-      alert("Cannot delete: " + (e.response?.data?.message || e.message));
+      refresh();
+    } catch (err) {
+      alert("Cannot delete: " + (err.response?.data?.message || err.message));
     }
   };
 
-  if (loading && categories.length === 0) return <div className="p-4 text-center">Loading...</div>;
+  if (loading && categories.length === 0)
+    return <div className="p-4 text-center">Loading...</div>;
 
   return (
     <div>
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <h1 className="text-2xl font-semibold text-gray-900">Categories</h1>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <form
-            onSubmit={handleSearch}
-            className="relative flex items-center gap-3 flex-1"
-          >
-            <div className="relative flex-1 sm:w-64">
-              <input
-                type="text"
-                placeholder="Search categories..."
-                autoComplete="off"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MagnifyingGlassIcon
-                  className="h-5 w-5 text-gray-400"
-                  aria-hidden="true"
-                />
-              </div>
-              {searchTerm && (
-                <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
-                  <button
-                    type="button"
-                    onClick={handleClear}
-                    className="p-1 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <XMarkIcon className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </div>
-              )}
-            </div>
+          <form onSubmit={handleSearch} className="relative flex items-center gap-3 flex-1">
+            <SearchBar
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onClear={handleClear}
+              placeholder="Search categories..."
+              className="sm:w-64"
+            />
             <button
               type="submit"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
             >
               Search
             </button>
@@ -167,6 +103,7 @@ export default function Categories() {
         </div>
       </div>
 
+      {/* Grid */}
       <div className="flex-1 flex flex-col min-h-0 relative mb-4">
         {categories.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -181,7 +118,11 @@ export default function Categories() {
                       {cat.name}
                     </h3>
                     <span
-                      className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full uppercase tracking-wider absolute right-5 top-5 ${cat.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                      className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full uppercase tracking-wider absolute right-5 top-5 ${
+                        cat.is_active
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
                     >
                       {cat.is_active ? "Active" : "Inactive"}
                     </span>
@@ -197,13 +138,13 @@ export default function Categories() {
                 <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-end space-x-2">
                   <button
                     onClick={() => openModal(cat)}
-                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded shadow-sm text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded shadow-sm text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition-colors"
                   >
                     <PencilIcon className="h-4 w-4 mr-1.5" /> Edit
                   </button>
                   <button
                     onClick={() => handleDelete(cat.id)}
-                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded shadow-sm text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded shadow-sm text-red-700 bg-red-100 hover:bg-red-200 transition-colors"
                   >
                     <TrashIcon className="h-4 w-4 mr-1.5" /> Delete
                   </button>
@@ -223,51 +164,54 @@ export default function Categories() {
 
       <div className="mt-auto">
         <Pagination
-          currentPage={currentPage}
-          lastPage={lastPage}
-          onPageChange={setCurrentPage}
-          totalItems={paginationData.total}
-          fromItem={paginationData.from}
-          toItem={paginationData.to}
+          currentPage={pagination.currentPage}
+          lastPage={pagination.lastPage}
+          onPageChange={setPage}
+          totalItems={pagination.total}
+          fromItem={pagination.from}
+          toItem={pagination.to}
         />
       </div>
 
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div
-              className="fixed inset-0 bg-blue-100 bg-opacity-75 transition-opacity opacity-100"
+              className="fixed inset-0 bg-slate-900/50 transition-opacity"
               onClick={() => setShowModal(false)}
-            ></div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">
-              &#8203;
-            </span>
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 opacity-100 translate-y-0 sm:scale-100">
+            />
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">
+                  {editId ? "Edit Category" : "Add Category"}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="p-1 rounded-full text-gray-400 hover:bg-gray-100"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Category Name
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Category Name</label>
                   <input
                     type="text"
                     required
                     value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Description
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Description</label>
                   <textarea
                     rows="3"
                     value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
                 </div>
@@ -275,26 +219,22 @@ export default function Categories() {
                   <input
                     type="checkbox"
                     checked={formData.is_active}
-                    onChange={(e) =>
-                      setFormData({ ...formData, is_active: e.target.checked })
-                    }
+                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                   />
-                  <label className="ml-2 block text-sm text-gray-900">
-                    Active status
-                  </label>
+                  <label className="ml-2 block text-sm text-gray-900">Active status</label>
                 </div>
-                <div className="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse border-gray-100">
+                <div className="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
                   <button
                     type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm"
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 sm:ml-3 sm:w-auto sm:text-sm"
                   >
                     {editId ? "Save" : "Add"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm"
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 sm:mt-0 sm:w-auto sm:text-sm"
                   >
                     Cancel
                   </button>

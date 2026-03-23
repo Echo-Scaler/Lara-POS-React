@@ -59,21 +59,8 @@ class ReportController extends Controller
             unset($tp->image);
         }
 
-        // 5. Sales Chart (Last 7 Days)
-        $days = 7;
-        $salesChart = [];
-
-        for ($i = $days - 1; $i >= 0; $i--) {
-            $date = Carbon::today()->subDays($i);
-            $total = Order::whereDate('created_at', $date)
-                ->where('status', 'completed')
-                ->sum('total');
-
-            $salesChart[] = [
-                'date' => $date->format('M d'),
-                'total' => (float) $total
-            ];
-        }
+        // 5. Sales Chart (Last 7 Days) — reused by salesChart endpoint
+        $salesChart = $this->getSalesChartData(7);
 
         return $this->successResponse([
             'sales_today' => $salesToday,
@@ -89,22 +76,31 @@ class ReportController extends Controller
 
     public function salesChart(Request $request)
     {
-        // Last 7 days sales
-        $days = 7;
-        $sales = [];
+        return $this->successResponse($this->getSalesChartData(7));
+    }
+
+    /**
+     * Build daily sales totals for the last N days.
+     *
+     * @param  int  $days
+     * @return array<int, array{date: string, total: float}>
+     */
+    private function getSalesChartData(int $days): array
+    {
+        $data = [];
 
         for ($i = $days - 1; $i >= 0; $i--) {
-            $date = Carbon::today()->subDays($i);
+            $date  = Carbon::today()->subDays($i);
             $total = Order::whereDate('created_at', $date)
                 ->where('status', 'completed')
                 ->sum('total');
 
-            $sales[] = [
-                'date' => $date->format('M d'),
-                'total' => $total
+            $data[] = [
+                'date'  => $date->format('M d'),
+                'total' => (float) $total,
             ];
         }
 
-        return $this->successResponse($sales);
+        return $data;
     }
 }
