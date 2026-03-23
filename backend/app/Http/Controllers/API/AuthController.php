@@ -101,8 +101,8 @@ class AuthController extends Controller
         
         $data = $request->validated();
 
-        if (isset($data['password']) && !empty($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
         } else {
             unset($data['password']);
         }

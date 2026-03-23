@@ -37,16 +37,30 @@ const Profile = () => {
 
     try {
       const data = new FormData();
-      data.append("name", formData.name);
-      if (formData.password) data.append("password", formData.password);
-      if (avatar) data.append("avatar", avatar);
+      
+      // Only append if changed
+      if (formData.name !== user?.name) {
+        data.append("name", formData.name);
+      }
+      
+      if (formData.password) {
+        data.append("password", formData.password);
+      }
+      
+      if (avatar) {
+        data.append("avatar", avatar);
+      }
+
+      // If nothing changed, don't send request
+      if (!data.has("name") && !data.has("password") && !data.has("avatar")) {
+        setMessage({ type: "info", text: "No changes detected." });
+        setLoading(false);
+        return;
+      }
+
       data.append("_method", "PUT"); // Laravel requirement for multipart PUT requests
 
-      const res = await api.post("/profile", data, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const res = await api.post("/profile", data);
       const updatedUser = res.data.data;
       
       // Update local storage if needed (but we mostly use AuthContext)
@@ -135,10 +149,12 @@ const Profile = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {message.text && (
                 <div
-                  className={`flex items-center p-4 rounded-2xl ${
+                  className={`flex items-center p-4 rounded-2xl border ${
                     message.type === "success"
-                      ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                      : "bg-red-50 text-red-700 border border-red-100"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                      : message.type === "info"
+                      ? "bg-blue-50 text-blue-700 border-blue-100"
+                      : "bg-red-50 text-red-700 border-red-100"
                   }`}
                 >
                   {message.type === "success" ? (
@@ -200,14 +216,13 @@ const Profile = () => {
                     </div>
                     <input
                       type="password"
-                      required
                       minLength={8}
                       value={formData.password}
                       onChange={(e) =>
                         setFormData({ ...formData, password: e.target.value })
                       }
                       className="block w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
-                      placeholder="Minimum 8 characters"
+                      placeholder="Minimum 8 characters (Leave blank to keep current)"
                     />
                   </div>
                   <p className="mt-2 text-[10px] text-slate-400 font-bold uppercase tracking-tight px-1">
